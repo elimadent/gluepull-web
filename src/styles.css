@@ -25,12 +25,18 @@
   --gp-surface: #121212;
   --gp-surface-alt: #1c1c1c;
   --gp-surface-3: #262626;
-  --gp-border: #2f2f2f;
-  --gp-border-soft: #1f1f1f;
+  /* `--gp-border` is the thin shiny gold trim worn by every card, panel,
+   * input, and tab on the app. Was `#2f2f2f` (charcoal); now a faint brushed
+   * gold against true black for a continuous metallic outline. */
+  --gp-border: rgba(212, 175, 55, 0.38);
+  --gp-border-soft: rgba(212, 175, 55, 0.15);
   --gp-hairline: rgba(212, 175, 55, 0.18);
+  /* `--gp-text-muted` carries the bulk of secondary UI copy (spec rows,
+   * meta lines, time-block readouts). Bumped from #a8a39a → #c6c0b6 for
+   * better legibility on true-black backgrounds. */
   --gp-text: #f3f1ea;
-  --gp-text-muted: #a8a39a;
-  --gp-text-faint: #6b6660;
+  --gp-text-muted: #c6c0b6;
+  --gp-text-faint: #8a857d;
 
   /* gold palette */
   --gp-gold: #d4af37;            /* primary brushed gold */
@@ -437,21 +443,596 @@ html { scroll-behavior: smooth; }
 .glue-head[disabled] {
   cursor: default;
 }
-.product-thumb {
+.product-thumb-wrap {
+  position: relative;
+  display: inline-block;
+  flex-shrink: 0;
+  cursor: zoom-in;
+  border-radius: var(--gp-r-sm);
+  transition: box-shadow 150ms ease, transform 150ms ease;
+}
+.product-thumb-wrap:hover,
+.product-thumb-wrap:focus-visible {
+  box-shadow: 0 0 0 1px var(--gp-gold), 0 8px 24px rgba(0, 0, 0, 0.6);
+  transform: translateY(-1px);
+  outline: none;
+}
+/* Zoom indicator chips hidden per user — the cursor / hover state on the
+ * image is enough; the chips were visually noisy. Click-to-fullscreen
+ * behavior is preserved by the button wrapper, not the chip. */
+.product-thumb-zoom,
+.mini-card-zoom,
+.plan-card-zoom { display: none !important; }
+
+/* ============================================================================
+ * Product drawer — bottom-sheet "Add to Anson cart" sheet that opens when
+ * the user taps any Buy / View link. Tuxedo styling matches the rest of the
+ * app: true-black panel, brushed-gold trim, display-serif headline.
+ * ============================================================================ */
+.drawer-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9998;
+  /* Heavier scrim so the tab bar / page below mute completely behind the
+   * drawer — otherwise the bottom-of-screen UI bleeds through and the CTAs
+   * read as floating text against the page rather than buttons on a panel. */
+  background: rgba(0, 0, 0, 0.92);
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  animation: drawer-fade 180ms ease-out;
+}
+/* Drawer panel needs to outrank the tab bar's backdrop-filter stacking
+ * context — bumping its own z-index above the overlay value defeats any
+ * iOS Safari "fixed element ignores parent z-index" quirks. */
+.drawer-overlay .drawer-panel { position: relative; z-index: 1; }
+@keyframes drawer-fade {
+  from { background-color: rgba(0, 0, 0, 0); }
+  to   { background-color: rgba(0, 0, 0, 0.92); }
+}
+.drawer-panel {
+  position: relative;
+  width: 100%;
+  max-width: 520px;
+  max-height: 92vh;
+  background: var(--gp-surface);
+  border-top: 1px solid var(--gp-gold);
+  border-left: 1px solid var(--gp-gold-deep);
+  border-right: 1px solid var(--gp-gold-deep);
+  border-radius: 16px 16px 0 0;
+  padding: var(--gp-md) var(--gp-lg) calc(var(--gp-lg) + env(safe-area-inset-bottom, 0px));
+  box-shadow: 0 -8px 32px rgba(0, 0, 0, 0.7),
+              0 -1px 0 var(--gp-gold-bright);
+  display: flex;
+  flex-direction: column;
+  gap: var(--gp-md);
+  overflow-y: auto;
+  animation: drawer-slide 240ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+@keyframes drawer-slide {
+  from { transform: translateY(100%); }
+  to   { transform: translateY(0); }
+}
+.drawer-grip {
+  width: 44px;
+  height: 4px;
+  border-radius: 2px;
+  background: var(--gp-gold-deep);
+  margin: 0 auto var(--gp-xs);
+  opacity: 0.7;
+}
+.drawer-close {
+  position: absolute;
+  top: 10px;
+  right: 12px;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: rgba(5, 5, 5, 0.7);
+  border: 1px solid var(--gp-gold-deep);
+  color: var(--gp-gold-bright);
+  font-size: 22px;
+  line-height: 1;
+  font-weight: 700;
+  cursor: pointer;
+  z-index: 1;
+}
+.drawer-close:hover { border-color: var(--gp-gold); }
+
+.drawer-head {
+  display: grid;
+  grid-template-columns: 96px 1fr;
+  gap: var(--gp-md);
+  align-items: flex-start;
+  padding-right: 36px; /* clear the close button */
+}
+.drawer-img {
   width: 96px;
   height: 96px;
+  border-radius: var(--gp-r-sm);
+  object-fit: cover;
+  background: #f4efe4;
+  border: 1px solid var(--gp-gold-deep);
+}
+.drawer-img-placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--gp-surface-3);
+}
+.drawer-head-text {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.drawer-name {
+  font-family: var(--gp-font-display);
+  font-size: 19px;
+  font-weight: 700;
+  line-height: 1.18;
+  letter-spacing: 0.2px;
+  color: var(--gp-cream);
+  margin: 0;
+}
+.drawer-desc {
+  color: var(--gp-text-muted);
+  font-size: var(--gp-fs-sm);
+  line-height: 1.4;
+  margin: 0;
+  /* Cap to ~3 lines so the drawer stays compact on phones. */
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.drawer-qty {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--gp-md);
+  padding: var(--gp-sm) var(--gp-md);
+  border: 1px solid var(--gp-border);
+  border-radius: var(--gp-r-sm);
+  background: var(--gp-bg);
+}
+.drawer-qty-label {
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 1.4px;
+  text-transform: uppercase;
+  color: var(--gp-gold);
+}
+.drawer-stepper {
+  display: inline-flex;
+  align-items: stretch;
+  background: var(--gp-surface);
+  border: 1px solid var(--gp-gold-deep);
+  border-radius: var(--gp-r-sm);
+  overflow: hidden;
+  height: 38px;
+}
+.drawer-stepper-btn {
+  width: 38px;
+  background: transparent;
+  color: var(--gp-gold-bright);
+  border: 0;
+  font-size: 18px;
+  font-weight: 800;
+  line-height: 1;
+  cursor: pointer;
+  transition: background-color 120ms ease, color 120ms ease;
+}
+.drawer-stepper-btn:hover:not(:disabled) {
+  background: var(--gp-gold);
+  color: #050505;
+}
+.drawer-stepper-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+.drawer-stepper-value {
+  min-width: 36px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--gp-font-display);
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--gp-text);
+  border-left: 1px solid var(--gp-border);
+  border-right: 1px solid var(--gp-border);
+}
+
+.drawer-error {
+  color: var(--gp-bad);
+  font-size: var(--gp-fs-sm);
+  margin: 0;
+  padding: var(--gp-sm) var(--gp-md);
+  background: rgba(226, 106, 106, 0.08);
+  border: 1px solid rgba(226, 106, 106, 0.25);
+  border-radius: var(--gp-r-sm);
+}
+
+.drawer-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: var(--gp-xs);
+}
+/* Every CTA is OBVIOUSLY a button — filled background, hard border, drop
+ * shadow, and a real press-down state. No "is this text or a button?"
+ * ambiguity. */
+.drawer-cta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--gp-sm);
+  width: 100%;
+  padding: 14px var(--gp-md);
+  border-radius: var(--gp-r-md);
+  font-family: var(--gp-font-body);
+  font-size: var(--gp-fs-sm);
+  font-weight: 800;
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+  min-height: 56px;
+  cursor: pointer;
+  text-decoration: none;
+  transition: background-color 150ms ease, color 150ms ease,
+              border-color 150ms ease, box-shadow 150ms ease,
+              transform 120ms ease;
+}
+.drawer-cta:active:not(:disabled) {
+  transform: translateY(1px);
+}
+.drawer-cta:disabled { opacity: 0.55; cursor: progress; }
+
+/* PRIMARY — tuxedo treatment matching the rest of the app: dark fill,
+ * thick bright-gold border, bright-gold text, strong gold halo. NOT solid
+ * gold (the app's design language is gold-on-black throughout). */
+.drawer-cta-primary {
+  background: #050505;
+  color: var(--gp-gold-bright);
+  border: 2px solid var(--gp-gold);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.55),
+              0 0 26px rgba(212, 175, 55, 0.3),
+              inset 0 0 0 1px rgba(212, 175, 55, 0.4);
+}
+.drawer-cta-primary:hover:not(:disabled) {
+  background: #0c0c0c;
+  border-color: var(--gp-gold-bright);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.6),
+              0 0 32px rgba(212, 175, 55, 0.42),
+              inset 0 0 0 1px var(--gp-gold-bright);
+}
+
+/* SECONDARY — clearly a button: surface fill + thick gold border + bright
+ * gold text. Tuxedo treatment. */
+.drawer-cta-secondary {
+  background: #1c1c1c;
+  color: var(--gp-gold-bright);
+  border: 2px solid var(--gp-gold);
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.45),
+              inset 0 0 0 1px rgba(212, 175, 55, 0.18);
+}
+.drawer-cta-secondary:hover:not(:disabled) {
+  background: #262626;
+  border-color: var(--gp-gold-bright);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.55),
+              0 0 22px rgba(212, 175, 55, 0.28),
+              inset 0 0 0 1px var(--gp-gold-bright);
+}
+
+/* TERTIARY — solid fill + visible soft border + cream text. Still reads as
+ * a button card, just quietest of the three. */
+.drawer-cta-tertiary {
+  background: #0a0a0a;
+  color: var(--gp-cream);
+  border: 1.5px solid #3a3a3a;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+}
+.drawer-cta-tertiary:hover:not(:disabled) {
+  background: #161616;
+  border-color: var(--gp-gold-deep);
+  color: var(--gp-gold-bright);
+}
+
+@media (min-width: 600px) {
+  /* On wider screens center the panel as a card rather than full-width sheet. */
+  .drawer-overlay { align-items: center; }
+  .drawer-panel {
+    border-radius: 16px;
+    border-top-width: 1px;
+    max-height: 86vh;
+  }
+}
+
+/* ============================================================================
+ * Cart pill — small circular icon button with a prominent count badge.
+ * Tucked into the bottom-right above the tab bar so it doesn't compete
+ * with the page. The number is the dominant element — you should see the
+ * count first, the cart icon second.
+ * ============================================================================ */
+.cart-pill {
+  position: fixed;
+  right: 14px;
+  bottom: calc(80px + env(safe-area-inset-bottom, 0px));
+  z-index: 50;
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: #050505;
+  color: var(--gp-gold-bright);
+  border: 1.5px solid var(--gp-gold);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  padding: 0;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.55),
+              0 0 18px rgba(212, 175, 55, 0.2);
+  transition: transform 150ms ease, box-shadow 150ms ease, border-color 150ms ease;
+  animation: cart-pill-in 240ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+.cart-pill:hover,
+.cart-pill:focus-visible {
+  transform: scale(1.06);
+  border-color: var(--gp-gold-bright);
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.6),
+              0 0 26px rgba(212, 175, 55, 0.32);
+}
+.cart-pill-icon {
+  font-size: 20px;
+  line-height: 1;
+}
+/* Count badge floats in the top-right corner of the circle — same pattern
+ * as iOS app icons. Pops with bright gold so the NUMBER reads first. */
+.cart-pill-count {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  min-width: 24px;
+  height: 24px;
+  padding: 0 6px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--gp-gold-bright);
+  color: #050505;
+  border: 2px solid #050505;
+  border-radius: 12px;
+  font-family: var(--gp-font-display);
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: 0;
+}
+/* "in cart" label is now visually-hidden but kept in DOM for screen readers. */
+.cart-pill-label {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+@keyframes cart-pill-in {
+  from { transform: scale(0.6); opacity: 0; }
+  to   { transform: scale(1); opacity: 1; }
+}
+
+/* ============================================================================
+ * Cart panel — full cart review sheet. Reuses .drawer-overlay + .drawer-panel
+ * for the chrome; just lays out a list of CartLine rows inside.
+ * ============================================================================ */
+.cart-panel-head {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding-right: 36px; /* clear the close button */
+}
+.cart-panel-title {
+  font-family: var(--gp-font-display);
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: 0.2px;
+  color: var(--gp-cream);
+  margin: 0;
+}
+.cart-panel-sub {
+  color: var(--gp-text-muted);
+  font-size: var(--gp-fs-sm);
+  line-height: 1.4;
+  margin: 0;
+}
+.cart-panel-empty {
+  color: var(--gp-text-muted);
+  font-size: var(--gp-fs-sm);
+  line-height: 1.5;
+  text-align: center;
+  padding: var(--gp-lg);
+  border: 1px dashed var(--gp-border);
+  border-radius: var(--gp-r-md);
+  background: var(--gp-bg);
+}
+.cart-line-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.cart-line {
+  display: grid;
+  grid-template-columns: 64px 1fr;
+  gap: var(--gp-md);
+  align-items: stretch;
+  padding: var(--gp-sm) var(--gp-md);
+  background: var(--gp-bg);
+  border: 1px solid var(--gp-border);
+  border-radius: var(--gp-r-sm);
+}
+.cart-line-img {
+  width: 64px;
+  height: 64px;
+  border-radius: var(--gp-r-sm);
+  object-fit: cover;
+  background: #f4efe4;
+  border: 1px solid var(--gp-gold-deep);
+}
+.cart-line-img-empty {
+  background: var(--gp-surface-3);
+}
+.cart-line-body {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+.cart-line-name {
+  font-family: var(--gp-font-display);
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: 0.2px;
+  color: var(--gp-cream);
+  margin: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+.cart-line-controls {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--gp-sm);
+}
+.cart-line-remove {
+  background: transparent;
+  border: 0;
+  color: var(--gp-bad);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 1.1px;
+  text-transform: uppercase;
+  cursor: pointer;
+  padding: 4px 6px;
+}
+.cart-line-remove:hover {
+  color: var(--gp-gold-bright);
+}
+.product-thumb {
+  width: 128px;
+  height: 128px;
   border-radius: var(--gp-r-sm);
   background: var(--gp-surface-3);
   border: 1px solid var(--gp-border);
   object-fit: cover;
-  flex-shrink: 0;
+  display: block;
 }
-.product-thumb.placeholder {
+.product-thumb.placeholder,
+.product-thumb.placeholder-svg {
+  width: 128px;
+  height: 128px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 26px;
+  font-size: 32px;
   color: var(--gp-text-faint);
+  flex-shrink: 0;
+}
+
+/* Full-screen product image lightbox */
+.image-lightbox {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background: rgba(0, 0, 0, 0.92);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--gp-lg);
+  cursor: zoom-out;
+  animation: gp-lightbox-in 160ms ease-out;
+}
+@keyframes gp-lightbox-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+.image-lightbox-img {
+  max-width: min(96vw, 1100px);
+  max-height: 92vh;
+  width: auto;
+  height: auto;
+  object-fit: contain;
+  border-radius: var(--gp-r-md);
+  background: #f4efe4;
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.7),
+              0 0 0 1px var(--gp-gold-deep);
+  cursor: default;
+}
+.image-lightbox-close {
+  position: absolute;
+  /* Push down past iOS notch / Dynamic Island so the X is always tappable. */
+  top: calc(16px + env(safe-area-inset-top, 0px));
+  right: calc(16px + env(safe-area-inset-right, 0px));
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: rgba(5, 5, 5, 0.9);
+  color: var(--gp-gold-bright);
+  border: 1.5px solid var(--gp-gold);
+  font-size: 32px;
+  font-weight: 700;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.6),
+              0 0 0 1px rgba(212, 175, 55, 0.35);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+.image-lightbox-close:hover,
+.image-lightbox-close:active {
+  border-color: var(--gp-gold-bright);
+  background: rgba(15, 15, 15, 1);
+  transform: scale(1.05);
+}
+/* Secondary close affordance — a small banner along the top that says
+ * "Tap anywhere to close". So even if the X is missed, the gesture is
+ * obvious. Auto-hides after 3s if the user doesn't tap. */
+.image-lightbox::before {
+  content: 'Tap anywhere to close';
+  position: absolute;
+  top: calc(20px + env(safe-area-inset-top, 0px));
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 6px 14px;
+  background: rgba(5, 5, 5, 0.75);
+  border: 1px solid var(--gp-gold-deep);
+  border-radius: 999px;
+  color: var(--gp-cream);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+  pointer-events: none;
+  animation: lightbox-hint 3.4s ease-out forwards;
+  z-index: 1;
+}
+@keyframes lightbox-hint {
+  0%   { opacity: 0; }
+  10%  { opacity: 1; }
+  70%  { opacity: 1; }
+  100% { opacity: 0; }
 }
 .glue-head-text {
   flex: 1;
@@ -727,39 +1308,17 @@ html { scroll-behavior: smooth; }
   outline-offset: 2px;
 }
 .compare-col.r1 {
-  border-color: rgba(212, 175, 55, 0.45);
-  box-shadow: 0 0 0 1px rgba(212, 175, 55, 0.18);
+  border-color: rgba(212, 175, 55, 0.55);
+  box-shadow: 0 0 0 1px rgba(212, 175, 55, 0.22),
+              0 6px 20px rgba(0, 0, 0, 0.55);
 }
-.compare-rank {
-  font-family: var(--gp-font-display);
-  font-size: var(--gp-fs-sm);
-  font-weight: 700;
-  color: var(--gp-text-faint);
-  letter-spacing: 0.5px;
-}
-.compare-col.r1 .compare-rank { color: var(--gp-gold); }
-.compare-col.r2 .compare-rank { color: var(--gp-silver); }
-.compare-col.r3 .compare-rank { color: var(--gp-bronze); }
-.compare-img {
-  width: 100%;
-  aspect-ratio: 1 / 1;
-  border-radius: var(--gp-r-sm);
-  object-fit: cover;
-  background: var(--gp-surface-3);
-  border: 1px solid var(--gp-border);
-}
-.compare-img.placeholder {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 26px;
-  color: var(--gp-text-faint);
-}
+/* Title sits up top — leading the card, not the rank number. */
 .compare-name {
   font-family: var(--gp-font-display);
-  font-size: 13px;
+  font-size: 15px;
   font-weight: 700;
-  line-height: 1.2;
+  line-height: 1.18;
+  letter-spacing: 0.2px;
   color: var(--gp-cream);
   overflow: hidden;
   display: -webkit-box;
@@ -767,24 +1326,204 @@ html { scroll-behavior: smooth; }
   -webkit-box-orient: vertical;
   word-break: break-word;
   hyphens: auto;
-  min-height: 32px;
+  min-height: 36px;
   width: 100%;
 }
-/* (compare-score / compare-score-label removed — top-3 picks are virtually
- * always the same score, so the "99/99/99" was confusing more than clarifying.) */
+
+/* Image with rank overlaid in display-serif. The wrapper carries the
+ * relative positioning so the rank pins to the image corner. */
+.compare-img-wrap {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  border-radius: var(--gp-r-sm);
+  overflow: hidden;
+  border: 1px solid var(--gp-border);
+  background: var(--gp-surface-3);
+}
+.compare-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.compare-img.placeholder,
+.compare-img.placeholder-svg {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 26px;
+  color: var(--gp-text-faint);
+}
+/* Solid-gold display-serif numeral in the card's top-left corner.
+ * Absolute-positioned so it sits ABOVE the title without consuming a row
+ * of vertical space — the title still flows full-width below it. */
+.compare-col { position: relative; }
+.compare-rank-num {
+  position: absolute;
+  top: 4px;
+  left: 10px;
+  font-family: var(--gp-font-display);
+  font-size: 30px;
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: -0.5px;
+  color: var(--gp-gold);
+  /* Faint gold glow so it reads as metallic, not flat type. */
+  text-shadow:
+    0 0 1px rgba(255, 230, 160, 0.6),
+    0 1px 0 rgba(0, 0, 0, 0.55);
+  pointer-events: none;
+  user-select: none;
+}
+.compare-col.r1 .compare-rank-num { color: var(--gp-gold-bright); }
+.compare-col.r2 .compare-rank-num { color: var(--gp-silver); }
+.compare-col.r3 .compare-rank-num { color: var(--gp-bronze); }
+/* Title clears the numeral on the first line so they don't collide. */
+.compare-col .compare-name { padding-left: 28px; }
+/* Image-wrap is the click surface — pointer feedback on tap. */
+.compare-img-wrap[role='button'] { cursor: zoom-in; }
+
 .compare-meta {
   display: flex;
   flex-direction: column;
-  gap: 2px;
-  font-size: 10px;
-  color: var(--gp-text-muted);
-  font-weight: 700;
-  letter-spacing: 0.5px;
-  text-transform: uppercase;
+  gap: 4px;
   width: 100%;
   flex: 1;
 }
+/* Paired Rig — gun + puller + tab + release agent for a glue. Each row is
+ * a compact two-line card: tiny gold role label on top, full product name
+ * in display serif beside the gold outbound-arrow, and the whole card is
+ * the tap target. Matches the rest of the app's editorial gold-on-black
+ * card language — no separate pill, no fighting elements. */
+.paired-rig .rig-rationale {
+  color: var(--gp-text-muted);
+  font-size: var(--gp-fs-sm);
+  font-style: italic;
+  line-height: 1.4;
+  margin: 0 0 6px;
+}
+.paired-rig .rig-how {
+  color: var(--gp-text-faint);
+  font-size: 11px;
+  line-height: 1.45;
+  margin: 0 0 var(--gp-md);
+}
+.rig-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.rig-row {
+  display: block;
+  background: var(--gp-bg);
+  border: 1px solid var(--gp-border);
+  border-radius: var(--gp-r-sm);
+  transition: background-color 150ms ease, border-color 150ms ease,
+              box-shadow 150ms ease;
+}
+.rig-row:hover,
+.rig-row:focus-within {
+  background: var(--gp-surface-alt);
+  border-color: var(--gp-gold);
+  box-shadow: 0 0 0 1px rgba(212, 175, 55, 0.35);
+}
+/* Single-row layout — role tag on the left, name in the middle, arrow on
+ * the right. Everything vertically centered so the row reads as ONE clean
+ * line rather than a stacked two-row card. */
+.rig-link {
+  display: flex;
+  align-items: center;
+  gap: var(--gp-md);
+  padding: 12px var(--gp-md);
+  text-decoration: none;
+  color: var(--gp-cream);
+  min-width: 0;
+}
+.rig-role {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 64px;
+  padding: 5px 10px;
+  background: rgba(212, 175, 55, 0.08);
+  border: 1px solid var(--gp-gold-deep);
+  border-radius: 4px;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 1.3px;
+  text-transform: uppercase;
+  color: var(--gp-gold);
+  line-height: 1;
+}
+.rig-row:hover .rig-role,
+.rig-row:focus-within .rig-role {
+  background: rgba(212, 175, 55, 0.18);
+  border-color: var(--gp-gold);
+  color: var(--gp-gold-bright);
+}
+.rig-name {
+  flex: 1;
+  min-width: 0;
+  font-family: var(--gp-font-display);
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: 0.2px;
+  color: var(--gp-cream);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.rig-row:hover .rig-name,
+.rig-row:focus-within .rig-name {
+  color: var(--gp-gold-bright);
+}
+.rig-chev {
+  flex: 0 0 auto;
+  color: var(--gp-gold);
+  font-size: 18px;
+  font-weight: 700;
+  line-height: 1;
+  transition: transform 150ms ease, color 150ms ease;
+}
+.rig-row:hover .rig-chev,
+.rig-row:focus-within .rig-chev {
+  color: var(--gp-gold-bright);
+  transform: translate(2px, -2px);
+}
+/* Long product names need room — on the narrowest phones we stack name
+ * onto its own line under the role tag so it can wrap to two lines without
+ * pushing the chevron off-screen. */
+@media (max-width: 380px) {
+  .rig-link {
+    flex-wrap: wrap;
+    row-gap: 6px;
+  }
+  .rig-name {
+    flex-basis: 100%;
+    white-space: normal;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+  }
+  .rig-chev {
+    margin-left: auto;
+  }
+}
+
+/* (compare-meta-score retired — raw match numbers were internal noise; the
+ *  #1/#2/#3 medal communicates ranking on its own.) */
 .compare-meta-row {
+  font-size: 11px;
+  color: var(--gp-text-muted);
+  font-weight: 700;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -1233,9 +1972,12 @@ html { scroll-behavior: smooth; }
 }
 .band:hover { color: var(--gp-cream); border-color: var(--gp-gold-deep); }
 .band.active {
-  background: var(--gp-gold);
+  background: #050505;
   border-color: var(--gp-gold);
-  color: #1a1308;
+  color: var(--gp-gold-bright);
+  box-shadow:
+    inset 0 0 0 1px var(--gp-gold-bright),
+    0 0 14px rgba(212, 175, 55, 0.16);
 }
 .list-pad { padding: 0 var(--gp-lg); }
 .empty {
@@ -1269,11 +2011,18 @@ html { scroll-behavior: smooth; }
   transition: border-color 150ms ease, color 150ms ease;
 }
 .toggle:hover { color: var(--gp-cream); border-color: var(--gp-gold-deep); }
+/* Active state — tuxedo treatment: dark surface, bright gold border, gold
+ * text. Matches the Buy button style so the page reads consistently
+ * instead of the previous flat-yellow billboard. */
 .toggle.active {
-  background: var(--gp-gold);
+  background: #050505;
   border-color: var(--gp-gold);
-  color: #1a1308;
+  color: var(--gp-gold-bright);
+  box-shadow:
+    inset 0 0 0 1px var(--gp-gold-bright),
+    0 0 18px rgba(212, 175, 55, 0.18);
 }
+/* Legacy plan-row (kept in case anything still mounts it). */
 .plan-row {
   display: flex;
   align-items: center;
@@ -1294,6 +2043,143 @@ html { scroll-behavior: smooth; }
   color: var(--gp-text-muted);
   font-size: var(--gp-fs-xs);
   margin-top: 2px;
+}
+
+/* Plan list — compact horizontal rows. Small thumbnail leads, then title +
+ * days-as-top-pick chip + specs + Buy. Reads like a real shopping list, not
+ * a giant product gallery. */
+.plan-grid {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gp-sm);
+  margin-top: var(--gp-md);
+}
+.plan-card {
+  display: flex;
+  gap: var(--gp-md);
+  background: var(--gp-surface);
+  border: 1px solid var(--gp-border);
+  border-radius: var(--gp-r-md);
+  padding: var(--gp-md);
+  align-items: stretch;
+}
+.plan-card-thumb {
+  position: relative;
+  flex: 0 0 84px;
+  width: 84px;
+  height: 84px;
+  border-radius: var(--gp-r-sm);
+  border: 1px solid var(--gp-border-soft);
+  background: var(--gp-surface-3);
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+}
+.plan-card-thumb-btn {
+  cursor: zoom-in;
+  appearance: none;
+  -webkit-appearance: none;
+}
+.plan-card-thumb img,
+.plan-card-thumb svg {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.plan-card-zoom {
+  position: absolute;
+  right: 3px;
+  bottom: 3px;
+  width: 18px;
+  height: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.7);
+  color: var(--gp-gold-bright);
+  border: 1px solid var(--gp-gold-deep);
+  border-radius: 3px;
+  font-size: 10px;
+  font-weight: 700;
+  pointer-events: none;
+}
+.plan-card-body {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.plan-card-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--gp-sm);
+}
+.plan-card-name {
+  font-family: var(--gp-font-display);
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: 0.2px;
+  color: var(--gp-cream);
+  margin: 0;
+  /* allow up to two lines, then ellipsize so the badge stays beside the title */
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  flex: 1;
+  min-width: 0;
+}
+.plan-card-badge {
+  flex: 0 0 auto;
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-width: 44px;
+  padding: 4px 8px;
+  background: rgba(5, 5, 5, 0.85);
+  border: 1px solid var(--gp-gold);
+  border-radius: var(--gp-r-sm);
+  color: var(--gp-gold-bright);
+  font-family: var(--gp-font-display);
+  line-height: 1;
+}
+.plan-card-badge strong {
+  font-size: 16px;
+  font-weight: 700;
+}
+.plan-card-badge-sub {
+  font-family: var(--gp-font-body);
+  font-size: 8px;
+  font-weight: 800;
+  letter-spacing: 1.1px;
+  text-transform: uppercase;
+  margin-top: 2px;
+  color: var(--gp-gold);
+}
+.plan-card-meta {
+  font-size: 11px;
+  color: var(--gp-text-muted);
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  margin: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.plan-card .buy {
+  margin-top: var(--gp-xs);
+  width: fit-content;
+  padding: 6px 14px;
+  font-size: 11px;
+  min-height: 32px;
 }
 .shop-all {
   display: inline-flex;
@@ -1564,10 +2450,11 @@ body.gp-standalone {
   flex: 0 0 auto;
 }
 
-/* Mini glue card — horizontal-scroll item. Image-first; the product photo
- * IS the product, so we let it own most of the card. */
+/* Mini glue card — horizontal-scroll item. Title leads, image follows, then
+ * the spec rows + buy. Title-first stops names like "Burro Cactus Green —
+ * Hot Melt PDR glue" from getting clipped. */
 .mini-card {
-  width: 180px;
+  width: 200px;
   background: var(--gp-surface);
   border: 1px solid var(--gp-border);
   border-radius: var(--gp-r-md);
@@ -1575,32 +2462,13 @@ body.gp-standalone {
   display: flex;
   flex-direction: column;
 }
-.mini-card-img {
-  width: 100%;
-  aspect-ratio: 1 / 1;
-  object-fit: cover;
-  background: var(--gp-surface-3);
-  display: block;
-}
-.mini-card-img.placeholder {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 38px;
-  color: var(--gp-text-faint);
-}
-.mini-card-body {
-  padding: var(--gp-md) var(--gp-sm) var(--gp-sm);
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  flex: 1;
-}
 .mini-card-name {
+  padding: var(--gp-sm) var(--gp-md) 0;
   font-family: var(--gp-font-display);
-  font-size: 14px;
+  font-size: 15px;
   font-weight: 700;
-  line-height: 1.2;
+  line-height: 1.18;
+  letter-spacing: 0.2px;
   color: var(--gp-cream);
   overflow: hidden;
   display: -webkit-box;
@@ -1608,7 +2476,66 @@ body.gp-standalone {
   -webkit-box-orient: vertical;
   word-break: break-word;
   hyphens: auto;
-  min-height: 34px;
+  min-height: 40px;
+}
+.mini-card-img-btn {
+  position: relative;
+  margin-top: var(--gp-sm);
+  width: 100%;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: zoom-in;
+  display: block;
+}
+.mini-card-zoom {
+  position: absolute;
+  right: 6px;
+  bottom: 6px;
+  width: 22px;
+  height: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.65);
+  color: var(--gp-gold-bright);
+  border: 1px solid var(--gp-gold-deep);
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 700;
+  pointer-events: none;
+  backdrop-filter: blur(3px);
+  -webkit-backdrop-filter: blur(3px);
+}
+.mini-card-img {
+  margin-top: var(--gp-sm);
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  object-fit: cover;
+  background: var(--gp-surface-3);
+  display: block;
+  /* Hairline gold between title block and image, keeps the surfaces feeling
+   * stacked rather than smeared together. */
+  border-top: 1px solid var(--gp-border-soft);
+  border-bottom: 1px solid var(--gp-border-soft);
+}
+.mini-card-img-btn .mini-card-img {
+  margin-top: 0; /* the button already carries the gap */
+}
+.mini-card-img.placeholder,
+.mini-card-img.placeholder-svg {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 38px;
+  color: var(--gp-text-faint);
+}
+.mini-card-body {
+  padding: var(--gp-md) var(--gp-md) var(--gp-sm);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  flex: 1;
 }
 /* (mini-card-score row removed — see compare-score note.) */
 .mini-card-meta {

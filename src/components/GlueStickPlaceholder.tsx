@@ -26,7 +26,16 @@ const COLOR_MAP: Record<string, string> = {
 };
 
 function colorFor(name: string): string {
-  return COLOR_MAP[name.toLowerCase()] ?? '#a08a55';
+  if (!name) return '#a08a55';
+  const lower = name.toLowerCase();
+  // Exact match first ("blue").
+  if (COLOR_MAP[lower]) return COLOR_MAP[lower];
+  // Substring match — handles free-text from the live crawl like
+  // "gold / yellow-gold (Brazilian)", "translucent purple", "root beer / dark brown".
+  for (const [key, hex] of Object.entries(COLOR_MAP)) {
+    if (lower.includes(key)) return hex;
+  }
+  return '#a08a55';
 }
 
 interface Props {

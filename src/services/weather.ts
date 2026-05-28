@@ -4,10 +4,10 @@ import { DailyForecast, LocationInfo, WeatherSnapshot } from '@/types';
  * Web port of services/weather.ts.
  *
  * Two ways to resolve where the user is:
- *   1. IP geolocation (ipapi.co)  — no permission prompt, no HTTPS requirement
+ *   1. IP geolocation (ipapi.co) , no permission prompt, no HTTPS requirement
  *      for the page, city-level accuracy. The default path because for a
  *      glue-picker keyed to the local weather, city accuracy is plenty.
- *   2. Browser Geolocation API    — precise GPS, but only available on a
+ *   2. Browser Geolocation API   , precise GPS, but only available on a
  *      secure context (HTTPS or localhost) and requires user permission.
  *      Used as an opt-in "refine my location" upgrade.
  *
@@ -61,7 +61,7 @@ const todayISO = (): string => new Date().toISOString().slice(0, 10);
 /**
  * Whether the browser Geolocation API can actually be called here. Outside a
  * secure context (HTTPS, localhost) modern browsers either reject the prompt
- * or quietly fail — better to know upfront so the UI hides the GPS button.
+ * or quietly fail, better to know upfront so the UI hides the GPS button.
  */
 export function geolocationAvailable(): boolean {
   if (typeof window === 'undefined') return false;
@@ -141,12 +141,76 @@ interface IpwhoResponse {
   country_code?: string;
 }
 
+interface FreeIpApiResponse {
+  latitude?: number;
+  longitude?: number;
+  cityName?: string;
+  regionName?: string;
+  countryCode?: string;
+}
+
+interface IpinfoResponse {
+  loc?: string; // "lat,lon"
+  city?: string;
+  region?: string;
+  country?: string;
+}
+
+/** 6-second hard timeout, keeps the auto-detect button responsive when a
+ *  provider hangs at the network layer (the failure mode the user was hitting). */
+async function fetchWithTimeout(url: string, ms = 6000): Promise<Response> {
+  const ctrl = new AbortController();
+  const t = setTimeout(() => ctrl.abort(), ms);
+  try {
+    return await fetch(url, {
+      headers: { Accept: 'application/json' },
+      signal: ctrl.signal,
+    });
+  } finally {
+    clearTimeout(t);
+  }
+}
+
+async function tryFreeIpApi(): Promise<LocationInfo> {
+  const res = await fetchWithTimeout('https://freeipapi.com/api/json/');
+  if (!res.ok) throw new Error(`freeipapi ${res.status}`);
+  const data: FreeIpApiResponse = await res.json();
+  if (typeof data.latitude !== 'number' || typeof data.longitude !== 'number') {
+    throw new Error('freeipapi empty');
+  }
+  // freeipapi returns 0/0 for unknowns, reject that, it's not a real fix.
+  if (data.latitude === 0 && data.longitude === 0) throw new Error('freeipapi 0/0');
+  return {
+    latitude: data.latitude,
+    longitude: data.longitude,
+    label: [data.cityName, data.regionName].filter(Boolean).join(', '),
+  };
+}
+
+async function tryIpinfo(): Promise<LocationInfo> {
+  const res = await fetchWithTimeout('https://ipinfo.io/json');
+  if (!res.ok) throw new Error(`ipinfo ${res.status}`);
+  const data: IpinfoResponse = await res.json();
+  if (!data.loc) throw new Error('ipinfo empty');
+  const [latS, lonS] = data.loc.split(',');
+  const lat = Number(latS);
+  const lon = Number(lonS);
+  if (!Number.isFinite(lat) || !Number.isFinite(lon)) {
+    throw new Error('ipinfo bad loc');
+  }
+  return {
+    latitude: lat,
+    longitude: lon,
+    label: [data.city, data.region].filter(Boolean).join(', '),
+  };
+}
+
 async function tryIpapi(): Promise<LocationInfo> {
-  const res = await fetch(IP_LOCATION_URL, { headers: { Accept: 'application/json' } });
+  const res = await fetchWithTimeout(IP_LOCATION_URL);
   if (!res.ok) throw new Error(`ipapi.co ${res.status}`);
   const data: IpapiResponse = await res.json();
   if (data.error || typeof data.latitude !== 'number' || typeof data.longitude !== 'number') {
-    throw new Error(data.reason || 'ipapi.co empty response');
+    throw new Error(data.reason || 'ipapi.co empty');
   }
   return {
     latitude: data.latitude,
@@ -156,11 +220,11 @@ async function tryIpapi(): Promise<LocationInfo> {
 }
 
 async function tryIpwho(): Promise<LocationInfo> {
-  const res = await fetch('https://ipwho.is/', { headers: { Accept: 'application/json' } });
+  const res = await fetchWithTimeout('https://ipwho.is/');
   if (!res.ok) throw new Error(`ipwho.is ${res.status}`);
   const data: IpwhoResponse = await res.json();
   if (data.success === false || typeof data.latitude !== 'number' || typeof data.longitude !== 'number') {
-    throw new Error(data.message || 'ipwho.is empty response');
+    throw new Error(data.message || 'ipwho.is empty');
   }
   return {
     latitude: data.latitude,
@@ -173,26 +237,49 @@ async function tryIpwho(): Promise<LocationInfo> {
  * Look up the visitor's location from their IP. No permission prompt, works
  * on HTTP pages (the fetch is auto-upgraded to HTTPS by modern browsers).
  *
- * Tries ipapi.co first, falls back to ipwho.is on failure (different
- * provider, different IP ranges — covers the case where one network blocks
- * the primary). Throws a user-friendly message only when BOTH fail so
- * temporary blips on a single provider don't break the experience.
+ * Races four free, no-key, HTTPS providers in parallel and returns the FIRST
+ * one that answers. Each provider sits on a different ASN/CDN, so a network
+ * that blocks one (we've seen Verizon block ipapi.co and ipwho.is return 403
+ * for some mobile ASNs) very rarely blocks all four. Falls through to a clean
+ * "set it manually" error only if every provider fails.
  */
 export async function getLocationFromIP(): Promise<LocationInfo> {
-  const errors: string[] = [];
-  try {
-    return await tryIpapi();
-  } catch (e) {
-    errors.push(e instanceof Error ? e.message : String(e));
-  }
-  try {
-    return await tryIpwho();
-  } catch (e) {
-    errors.push(e instanceof Error ? e.message : String(e));
-  }
-  throw new Error(
-    `Auto-detect couldn't reach a location service (${errors.join(' / ')}). Set conditions manually or try again.`
-  );
+  const providers: Array<{ name: string; run: () => Promise<LocationInfo> }> = [
+    { name: 'freeipapi', run: tryFreeIpApi },
+    { name: 'ipinfo', run: tryIpinfo },
+    { name: 'ipapi.co', run: tryIpapi },
+    { name: 'ipwho.is', run: tryIpwho },
+  ];
+
+  // Race them: resolve with the first fulfilled, only reject if ALL fail.
+  // (Hand-rolled instead of Promise.any so we stay compatible with this
+  // project's tsconfig lib target.)
+  return new Promise<LocationInfo>((resolve, reject) => {
+    const errors: string[] = [];
+    let remaining = providers.length;
+    let settled = false;
+    providers.forEach((p) => {
+      p.run().then(
+        (loc) => {
+          if (settled) return;
+          settled = true;
+          resolve(loc);
+        },
+        (err: unknown) => {
+          const msg = err instanceof Error ? err.message : String(err);
+          errors.push(`${p.name}: ${msg}`);
+          remaining -= 1;
+          if (remaining === 0 && !settled) {
+            reject(
+              new Error(
+                `Auto-detect couldn't reach a location service (${errors.join(' / ')}). Set your location manually with the state picker or search instead.`
+              )
+            );
+          }
+        }
+      );
+    });
+  });
 }
 
 /**
@@ -273,14 +360,19 @@ export async function fetchDailyForecast(
 
 /**
  * Fetch a multi-day hourly forecast and split it into one DailyForecast per
- * day. Open-Meteo supports up to 16 forecast days. Powers weekly/monthly
- * pre-buy planning.
+ * day. Open-Meteo's free forecast endpoint caps at 16 days, so for longer
+ * horizons (e.g. "This Month" = 30 days) we PAD the back half by cycling
+ * the 16-day pattern as a climatology proxy. Padded days are flagged
+ * `source: 'projected'` so the UI can distinguish them if needed; the
+ * aggregation logic treats them the same as forecast days so the buy list
+ * reflects a full 30-day stocking horizon.
  */
 export async function fetchMultiDayForecast(
   location: LocationInfo,
   days: number
 ): Promise<DailyForecast[]> {
-  const forecastDays = Math.max(1, Math.min(16, Math.round(days)));
+  const requested = Math.max(1, Math.round(days));
+  const forecastDays = Math.min(16, requested);
   const params = new URLSearchParams({
     latitude: String(location.latitude),
     longitude: String(location.longitude),
@@ -316,7 +408,35 @@ export async function fetchMultiDayForecast(
     else byDate.set(date, [snap]);
   });
 
-  return [...byDate.entries()]
+  const forecastDaysList: DailyForecast[] = [...byDate.entries()]
     .sort(([a], [b]) => a.localeCompare(b))
-    .map(([date, hourly]) => ({ location, hourly, date, source: 'forecast' as const }));
+    .map(([date, hourly]) => ({
+      location,
+      hourly,
+      date,
+      source: 'forecast' as const,
+    }));
+
+  if (requested <= forecastDaysList.length || forecastDaysList.length === 0) {
+    return forecastDaysList.slice(0, requested);
+  }
+
+  // Need to pad beyond Open-Meteo's 16-day window. Cycle the forecast pattern
+  // forward as a climatology proxy, the buy-list aggregator counts each day
+  // equally, so days 17..N still influence the "how many sticks" math.
+  const padded: DailyForecast[] = [...forecastDaysList];
+  const lastDate = new Date(`${forecastDaysList[forecastDaysList.length - 1].date}T12:00:00Z`);
+  const needed = requested - forecastDaysList.length;
+  for (let i = 0; i < needed; i++) {
+    const src = forecastDaysList[i % forecastDaysList.length];
+    const projDate = new Date(lastDate);
+    projDate.setUTCDate(projDate.getUTCDate() + i + 1);
+    padded.push({
+      location,
+      hourly: src.hourly,
+      date: projDate.toISOString().slice(0, 10),
+      source: 'projected' as const,
+    });
+  }
+  return padded;
 }

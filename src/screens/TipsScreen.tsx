@@ -9,7 +9,7 @@ import { tipSections } from '@/data/tips';
 import { linkTarget } from '@/utils/link';
 
 /**
- * Editorial layout — each tip card is structured like a small print-magazine
+ * Editorial layout, each tip card is structured like a small print-magazine
  * spread. When a section has a real Anson product to feature, its photo is
  * the section thumbnail and a "Tool shown" footer links to the product. When
  * Anson doesn't carry the relevant tool (e.g. handheld heat guns / torches),

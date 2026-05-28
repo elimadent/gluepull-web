@@ -1,4 +1,5 @@
 import { getAnsonProduct } from '@/data/products';
+import { gunTempCompact } from '@/utils/gunTemp';
 import { BlockRecommendation } from '@/types';
 
 interface TimelineRowProps {
@@ -36,16 +37,14 @@ export function TimelineRow({ recommendation, onPress, active }: TimelineRowProp
           {Math.round(conditions.temperatureF)}°F
         </span>
         <span className="block-sub">
-          {Math.round(conditions.humidity)}% RH
+          {Math.round(conditions.humidity)}%
         </span>
       </div>
       <div className="glue-col">
         <span className="use-label">BEST GLUE</span>
         <p className="glue-name-sm">{displayName}</p>
         {top ? (
-          <p className="match">
-            {top.score} match · {top.glue.gunTemp} gun
-          </p>
+          <p className="match">{gunTempCompact(top.glue.gunTemp)}</p>
         ) : null}
       </div>
       <span className="chev" aria-hidden>

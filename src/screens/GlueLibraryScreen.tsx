@@ -18,7 +18,7 @@ function bandFor(glue: Glue): Band {
 
 /**
  * Static catalog of every glue in the dataset. Intentionally does NOT score
- * against current weather — that's the Home screen's job. This view is
+ * against current weather, that's the Home screen's job. This view is
  * purely a browseable reference: search + filter by temperature band.
  */
 export function GlueLibraryScreen() {

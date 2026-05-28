@@ -1,27 +1,25 @@
 import { useEffect, useRef, useState } from 'react';
+import { useWeather } from '@/context/WeatherContext';
 import { US_STATES } from '@/data/usStates';
 import { geocodeSearch, type GeocodeResult } from '@/services/weather';
-import type { LocationInfo } from '@/types';
-
-interface TripPlannerProps {
-  /** Called with the chosen location. */
-  onPick: (location: LocationInfo) => void;
-  /** Optional label of the currently active trip location, for display. */
-  activeLabel?: string | null;
-  disabled?: boolean;
-}
 
 /**
- * Three ways to pick a trip location, all in one component:
- *   1. Quick US state dropdown — defaults to the state's largest metro
- *   2. Free-text search — city, zip code, or any international location
- *      (debounced live autocomplete via Open-Meteo geocoding)
- *   3. (Clear / reset handled by parent)
+ * Global location picker, lives at the top of Home.
  *
- * Goal: make trip-planning fast without ditching the international /
- * zip-code flexibility power users want.
+ * Drives the app-wide `location` in WeatherContext, which Home AND Plan (and
+ * anything else needing weather) read from. Three ways to set it:
+ *   1. Auto-detect from the visitor's IP
+ *   2. US state dropdown, picks the state's largest metro
+ *   3. Free-text search, city, zip, or any international place name
+ *      (debounced live autocomplete via Open-Meteo geocoding)
+ *
+ * Stays open while no location is set; collapses once one is. The user can
+ * always tap the header to re-open it and change locations, or hit Clear.
  */
-export function TripPlanner({ onPick, activeLabel, disabled }: TripPlannerProps) {
+export function LocationPicker() {
+  const { location, loading, error, setLocation, detectLocation, clearLocation } =
+    useWeather();
+
   const [stateCode, setStateCode] = useState('TX');
   const [search, setSearch] = useState('');
   const [results, setResults] = useState<GeocodeResult[]>([]);
@@ -29,7 +27,7 @@ export function TripPlanner({ onPick, activeLabel, disabled }: TripPlannerProps)
   const [searchError, setSearchError] = useState<string | null>(null);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Debounced live search
+  // Debounced live geocode search
   useEffect(() => {
     if (debounceRef.current) clearTimeout(debounceRef.current);
     const q = search.trim();
@@ -56,51 +54,63 @@ export function TripPlanner({ onPick, activeLabel, disabled }: TripPlannerProps)
     };
   }, [search]);
 
-  const pickFromState = () => {
+  const pickFromState = async () => {
     const s = US_STATES.find((x) => x.code === stateCode);
     if (!s) return;
-    onPick({
+    await setLocation({
       latitude: s.lat,
       longitude: s.lon,
       label: `${s.city}, ${s.code}`,
     });
   };
 
-  const pickFromGeocode = (g: GeocodeResult) => {
-    onPick({ latitude: g.latitude, longitude: g.longitude, label: g.label });
+  const pickFromGeocode = async (g: GeocodeResult) => {
     setSearch('');
     setResults([]);
+    await setLocation({ latitude: g.latitude, longitude: g.longitude, label: g.label });
   };
 
   return (
-    <details className="collapsible trip-panel">
+    <details className="collapsible trip-panel" open={!location}>
       <summary>
-        <span className="collapsible-eyebrow">Trip Planner</span>
-        <span className="collapsible-title">Working somewhere else?</span>
+        <span className="collapsible-eyebrow">Location</span>
+        <span className="collapsible-title">
+          {location?.label ?? 'Set your location'}
+        </span>
         <span className="collapsible-chev" aria-hidden>▾</span>
       </summary>
       <div className="collapsible-body">
         <p className="trip-dek">
-          Override the location so the plan reflects where you'll actually be
-          working. Pick a US state, or type any city, zip, or international
-          place name.
+          Whatever you choose here drives every tab, Home picks, hourly
+          timeline, and Plan all use this location.
         </p>
 
-        {activeLabel ? (
+        {location ? (
           <p className="trip-status">
-            ✓ Trip active: <strong>{activeLabel}</strong>
+            ✓ Active: <strong>{location.label ?? 'Selected location'}</strong>
           </p>
         ) : null}
 
-        <div className="trip-controls">
+        {error ? <p className="inline-warn">{error}</p> : null}
+
+        <button
+          type="button"
+          className="detect-btn"
+          onClick={() => void detectLocation()}
+          disabled={loading}
+        >
+          {loading ? 'Detecting…' : '📍 Auto-detect from my IP'}
+        </button>
+
+        <div className="trip-controls" style={{ marginTop: 'var(--gp-md)' }}>
           <label className="trip-field">
-            <span className="trip-field-label">Quick — US state</span>
+            <span className="trip-field-label">Or, US state</span>
             <div className="trip-state-row">
               <select
                 className="trip-select"
                 value={stateCode}
                 onChange={(e) => setStateCode(e.target.value)}
-                disabled={disabled}
+                disabled={loading}
               >
                 {US_STATES.map((s) => (
                   <option key={s.code} value={s.code}>
@@ -111,8 +121,8 @@ export function TripPlanner({ onPick, activeLabel, disabled }: TripPlannerProps)
               <button
                 type="button"
                 className="apply trip-use-state"
-                onClick={pickFromState}
-                disabled={disabled}
+                onClick={() => void pickFromState()}
+                disabled={loading}
               >
                 Use
               </button>
@@ -121,18 +131,18 @@ export function TripPlanner({ onPick, activeLabel, disabled }: TripPlannerProps)
         </div>
 
         <div className="trip-search">
-          <label className="trip-field-label" htmlFor="gp-trip-search">
-            Or — search city, zip, or any country
+          <label className="trip-field-label" htmlFor="gp-loc-search">
+            Or, search city, zip, or any country
           </label>
           <input
-            id="gp-trip-search"
+            id="gp-loc-search"
             className="search"
             type="search"
             placeholder="e.g. 78641 · Dallas · Tokyo"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             autoComplete="off"
-            disabled={disabled}
+            disabled={loading}
           />
           {searchLoading ? (
             <p className="trip-search-hint">Searching…</p>
@@ -148,8 +158,8 @@ export function TripPlanner({ onPick, activeLabel, disabled }: TripPlannerProps)
                   <button
                     type="button"
                     className="trip-result-btn"
-                    onClick={() => pickFromGeocode(r)}
-                    disabled={disabled}
+                    onClick={() => void pickFromGeocode(r)}
+                    disabled={loading}
                   >
                     <span className="trip-result-name">{r.label}</span>
                     {r.postcode ? (
@@ -161,6 +171,20 @@ export function TripPlanner({ onPick, activeLabel, disabled }: TripPlannerProps)
             </ul>
           ) : null}
         </div>
+
+        {location ? (
+          <div className="trip-clear-row">
+            <button
+              type="button"
+              className="ghost-btn"
+              onClick={clearLocation}
+              disabled={loading}
+            >
+              <span aria-hidden>↺</span>
+              <span>Clear location</span>
+            </button>
+          </div>
+        ) : null}
       </div>
     </details>
   );

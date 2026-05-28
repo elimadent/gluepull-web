@@ -1,6 +1,7 @@
-import { useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { ComparisonGrid } from '@/components/ComparisonGrid';
 import { GlueCard } from '@/components/GlueCard';
+import { LocationPicker } from '@/components/LocationPicker';
 import { Screen } from '@/components/Screen';
 import { Section } from '@/components/Section';
 import { TimeBlockSection } from '@/components/TimeBlockSection';
@@ -37,14 +38,43 @@ interface StepperProps {
   ariaLabel: string;
 }
 
-/** Stepper: typeable number field with − and + buttons and a unit suffix. */
+/** Stepper: typeable number field with − and + buttons and a unit suffix.
+ *
+ *  While focused the input keeps a local draft string the user can backspace
+ *  to empty / overtype freely, we DON'T snap to `min` on empty as that fights
+ *  the user. We only commit valid finite numbers to `onChange`; on blur, if
+ *  the draft is empty or unparseable, we restore the underlying value. Focus
+ *  selects-all so tap-then-type replaces the value cleanly. */
 function Stepper({ value, min, max, step = 1, unit, onChange, ariaLabel }: StepperProps) {
   const clamp = (n: number) => Math.max(min, Math.min(max, n));
-  const handleType = (raw: string) => {
-    if (raw === '' || raw === '-') return onChange(min);
+  const [focused, setFocused] = useState(false);
+  const [draft, setDraft] = useState<string>(String(value));
+
+  // Pick up external changes (slider drag, +/-, auto-detect) when not editing.
+  useEffect(() => {
+    if (!focused) setDraft(String(value));
+  }, [value, focused]);
+
+  const handleChange = (raw: string) => {
+    setDraft(raw);
+    // Leave underlying value alone while the draft is empty / mid-edit ("-",
+    // "1.", etc.). Only commit when we get a finite number.
+    if (raw === '' || raw === '-' || raw === '.' || raw === '-.') return;
     const n = Number(raw);
     if (Number.isFinite(n)) onChange(clamp(Math.round(n)));
   };
+
+  const handleBlur = () => {
+    setFocused(false);
+    if (draft === '' || draft === '-' || draft === '.' || draft === '-.' ||
+        !Number.isFinite(Number(draft))) {
+      setDraft(String(value));
+    } else {
+      // Make the visible text reflect the clamped/rounded committed value.
+      setDraft(String(clamp(Math.round(Number(draft)))));
+    }
+  };
+
   return (
     <div className="stepper" role="group" aria-label={ariaLabel}>
       <button
@@ -59,8 +89,14 @@ function Stepper({ value, min, max, step = 1, unit, onChange, ariaLabel }: Stepp
         type="text"
         inputMode="decimal"
         className="stepper-input"
-        value={value}
-        onChange={(e) => handleType(e.target.value)}
+        value={draft}
+        onChange={(e) => handleChange(e.target.value)}
+        onFocus={(e) => {
+          setFocused(true);
+          // Select-all so a tap-then-type replaces the existing number.
+          e.currentTarget.select();
+        }}
+        onBlur={handleBlur}
         aria-label={ariaLabel}
       />
       <span className="stepper-unit">{unit}</span>
@@ -80,12 +116,9 @@ export function HomeScreen() {
   const {
     conditions,
     forecast,
-    loading,
-    error,
-    locationLabel,
+    location,
     setTemperature,
     setHumidity,
-    detectLocation,
   } = useWeather();
 
   const topNow = useMemo(() => topRecommendations(conditions, 3), [conditions]);
@@ -95,28 +128,24 @@ export function HomeScreen() {
   );
   const activeBlockId = getBlockForHour(new Date().getHours()).id;
 
-  const subtitle = locationLabel
-    ? `${locationLabel} · auto-detected (approximate)`
-    : 'Set conditions below, or auto-detect from your location.';
+  const subtitle = location
+    ? `${location.label ?? 'Selected location'} · settings here drive every tab.`
+    : 'Set your location and conditions, they drive every tab.';
 
   return (
-    <Screen title="GluePull" subtitle={subtitle}>
+    <Screen title="Glue IQ" subtitle={subtitle}>
       <Section
-        title="Your conditions"
-        subtitle="Drag, type, or auto-detect — recommendations update live."
+        title="Location"
+        subtitle="Set where you'll actually be pulling dents. Glue IQ pulls live temperature and humidity for this spot, ranks the glues that match today's conditions, recommends the gun, tabs, and pull tool that go with them, and builds a 30-day buy list on the Plan tab. Change it any time and every screen rebuilds."
+      >
+        <LocationPicker />
+      </Section>
+
+      <Section
+        title="Conditions"
+        subtitle="Drag, type, or get the live readings from your picked location."
       >
         <div className="conditions-card">
-          <button
-            type="button"
-            className="detect-btn"
-            onClick={detectLocation}
-            disabled={loading}
-          >
-            <span aria-hidden>📍</span>
-            <span>{loading ? 'Detecting…' : 'Auto-detect from my location'}</span>
-          </button>
-          {error ? <p className="inline-warn">{error}</p> : null}
-
           <div className="cond-field">
             <div className="cond-row">
               <span className="cond-label-text">
@@ -187,7 +216,7 @@ export function HomeScreen() {
 
       {topNow.length ? (
         <Section
-          title="Top 3 picks — compared"
+          title="Top 3 picks, compared"
           subtitle="Tap any card to jump down to its full breakdown."
         >
           <ComparisonGrid picks={topNow} />
@@ -213,7 +242,7 @@ export function HomeScreen() {
       {blocks.length ? (
         <Section
           title="Today by the hour"
-          subtitle="From your auto-detected forecast — swipe each row to see more."
+          subtitle="From your auto-detected forecast, swipe each row to see more."
         >
           <div className="time-blocks">
             {blocks.map((rec) => (

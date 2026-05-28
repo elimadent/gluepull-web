@@ -24,7 +24,7 @@ export function TimeBlockSection({ rec, active }: TimeBlockSectionProps) {
         </span>
         <h2 className="time-block-title">{block.label}</h2>
         <span className="time-block-conds">
-          {Math.round(conditions.temperatureF)}°F · {Math.round(conditions.humidity)}% RH
+          {Math.round(conditions.temperatureF)}°F · {Math.round(conditions.humidity)}%
         </span>
         {active ? <span className="time-block-now">Now</span> : null}
       </header>

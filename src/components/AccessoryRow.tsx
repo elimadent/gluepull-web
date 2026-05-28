@@ -19,7 +19,7 @@ export function AccessoryRow({ accessory }: { accessory: Accessory }) {
       href={accessory.purchaseLink}
       target={linkTarget(accessory.purchaseLink)}
       rel="noopener noreferrer"
-      aria-label={`${accessory.name} — open on ansonpdr.com`}
+      aria-label={`${accessory.name}, open on ansonpdr.com`}
     >
       <div className="icon-wrap" aria-hidden>
         {ICON_BY_CATEGORY[accessory.category]}

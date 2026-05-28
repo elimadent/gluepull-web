@@ -1,8 +1,11 @@
 import { useState } from 'react';
 import { GlueStickPlaceholder } from '@/components/GlueStickPlaceholder';
+import { PairedRig } from '@/components/PairedRig';
+import { ProductImageLightbox } from '@/components/ProductImageLightbox';
 import { RankBadge } from '@/components/RankBadge';
 import { getAnsonProduct } from '@/data/products';
 import { colors } from '@/theme/theme';
+import { gunTempLabel } from '@/utils/gunTemp';
 import { linkTarget } from '@/utils/link';
 import { Glue } from '@/types';
 
@@ -10,15 +13,16 @@ import { Glue } from '@/types';
  * Chart-style glue card. Every glue has the same labeled sections in the same
  * order so a tech can scan and compare across cards predictably:
  *
- *   1. Header — rank · photo · name · tagline · (toggle product details)
- *   2. SPECS — strength / gun / pull method / temp / humidity (static)
- *   3. MATCH — current-condition reasons + warnings (dynamic per pick)
- *   4. WHERE IT SHINES — best panel / humidity / damage type
+ *   1. Header, rank · photo · name · tagline · (toggle product details)
+ *   2. SPECS, strength / gun / pull method / temp / humidity (static)
+ *   3. MATCH, current-condition reasons + warnings (dynamic per pick)
+ *   4. WHERE IT SHINES, best panel / humidity / damage type
  *   5. PROS / CONS
  *   6. Buy CTA
  */
 
-/** Best-panel-conditions narrative derived from the dataset's range + tier. */
+/** Best-panel-conditions narrative derived from the dataset's range + tier.
+ *  Plain text, no icons (the section header already does the labelling). */
 function bestPanelConditions(g: Glue): {
   climate: string;
   humidity: string;
@@ -26,26 +30,24 @@ function bestPanelConditions(g: Glue): {
 } {
   const tMid = (g.optimalTemp.min + g.optimalTemp.max) / 2;
   let climate: string;
-  if (tMid >= 95) climate = '☀️ Sun-baked summer panels';
-  else if (tMid >= 80) climate = '🌤️ Warm panels & outdoor shade in summer';
-  else if (tMid >= 70) climate = '🏢 Indoor shop / mild outdoor — daily-driver';
-  else if (tMid >= 60) climate = '⛅ Cool mornings & shoulder seasons';
-  else climate = '❄️ Cold panels — winter mornings, refrigerated shops';
+  if (tMid >= 95) climate = 'Sun-baked summer panels';
+  else if (tMid >= 80) climate = 'Warm panels & outdoor shade in summer';
+  else if (tMid >= 70) climate = 'Indoor shop / mild outdoor, daily-driver';
+  else if (tMid >= 60) climate = 'Cool mornings & shoulder seasons';
+  else climate = 'Cold panels, winter mornings, refrigerated shops';
 
   let humidity: string;
-  if (g.optimalHumidity.max <= 40)
-    humidity = '🏜 Dry air — desert / arid climates';
+  if (g.optimalHumidity.max <= 40) humidity = 'Dry air, desert / arid climates';
   else if (g.optimalHumidity.min >= 55)
-    humidity = '💧 Humid air — Gulf coast, summer monsoons';
-  else humidity = '🌫 Average humidity';
+    humidity = 'Humid air, Gulf coast, summer monsoons';
+  else humidity = 'Average humidity';
 
   let damage: string;
   if (g.strength === 'Super High')
-    damage = '💪 Lateral tension / collision — big high-tension dents';
+    damage = 'Lateral tension / collision, big high-tension dents';
   else if (g.strength === 'High')
-    damage = '🔨 Slide-hammer pulls on medium-to-large dents';
-  else
-    damage = '🪶 Small dings, finish passes, clean release on factory paint';
+    damage = 'Slide-hammer pulls on medium-to-large dents';
+  else damage = 'Small dings, finish passes, clean release on factory paint';
 
   return { climate, humidity, damage };
 }
@@ -59,12 +61,13 @@ interface GlueCardProps {
   /** When set, shows a #1/#2/#3 medal badge. */
   rank?: number;
   /** Optional per-current-conditions reasons & warnings. Omit on the Library
-   *  screen — the catalog should be static (no live scoring against weather). */
+   *  screen, the catalog should be static (no live scoring against weather). */
   match?: { reasons: string[]; warnings: string[] };
 }
 
 export function GlueCard({ glue, rank, match }: GlueCardProps) {
   const [descOpen, setDescOpen] = useState(false);
+  const [lightboxOpen, setLightboxOpen] = useState(false);
   const reasons = match?.reasons ?? [];
   const warnings = match?.warnings ?? [];
 
@@ -95,12 +98,33 @@ export function GlueCard({ glue, rank, match }: GlueCardProps) {
       >
         {rank ? <RankBadge rank={rank} /> : null}
         {imageUrl ? (
-          <img
-            src={imageUrl}
-            alt={`${displayName} product photo`}
-            className="product-thumb"
-            loading="lazy"
-          />
+          <span
+            className="product-thumb-wrap"
+            role="button"
+            tabIndex={0}
+            aria-label={`Open large view of ${displayName}`}
+            onClick={(e) => {
+              // Don't also toggle the description card, opening the image
+              // is its own action.
+              e.stopPropagation();
+              setLightboxOpen(true);
+            }}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                e.stopPropagation();
+                setLightboxOpen(true);
+              }
+            }}
+          >
+            <img
+              src={imageUrl}
+              alt={`${displayName} product photo`}
+              className="product-thumb"
+              loading="lazy"
+            />
+            <span className="product-thumb-zoom" aria-hidden>⤢</span>
+          </span>
         ) : (
           <GlueStickPlaceholder color={glue.color} className="product-thumb placeholder-svg" />
         )}
@@ -131,11 +155,11 @@ export function GlueCard({ glue, rank, match }: GlueCardProps) {
         <dl className="spec-grid">
           <dt>Strength</dt>
           <dd>{glue.strength}</dd>
-          <dt>Gun Temp</dt>
-          <dd>{glue.gunTemp}</dd>
+          <dt>Gun Setting</dt>
+          <dd>{gunTempLabel(glue.gunTemp)}</dd>
           <dt>Pull Method</dt>
           <dd>{methodLabel(glue.pullMethod)}</dd>
-          <dt>Temp Range</dt>
+          <dt>Panel Temp</dt>
           <dd>
             {tempRange.min}–{tempRange.max}°F
             {tempNote ? <span className="spec-note"> {tempNote}</span> : null}
@@ -145,7 +169,7 @@ export function GlueCard({ glue, rank, match }: GlueCardProps) {
         </dl>
       </section>
 
-      {/* Section 2: Match notes (dynamic) — only shown when match data passed */}
+      {/* Section 2: Match notes (dynamic), only shown when match data passed */}
       {match && (reasons.length || warnings.length) ? (
         <section className="glue-section">
           <h4 className="glue-section-head">Match Notes</h4>
@@ -178,6 +202,9 @@ export function GlueCard({ glue, rank, match }: GlueCardProps) {
           <dd>{damage}</dd>
         </dl>
       </section>
+
+      {/* Section 3a: Paired rig, gun + puller + tab + release agent */}
+      <PairedRig glue={glue} />
 
       {/* Section 4: Pros / Cons */}
       <section className="glue-section">
@@ -225,6 +252,14 @@ export function GlueCard({ glue, rank, match }: GlueCardProps) {
           Product not yet linked
         </div>
       )}
+
+      {lightboxOpen && imageUrl ? (
+        <ProductImageLightbox
+          src={imageUrl}
+          alt={`${displayName} product photo`}
+          onClose={() => setLightboxOpen(false)}
+        />
+      ) : null}
     </article>
   );
 }

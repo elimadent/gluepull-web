@@ -2,7 +2,7 @@ import { Accessory, AccessoryCategory } from '@/types';
 
 /**
  * Related PDR products used for smart bundle recommendations.
- * purchaseLink slugs are realistic placeholders — verify against ansonpdr.com.
+ * purchaseLink slugs are realistic placeholders, verify against ansonpdr.com.
  */
 export const accessories: Accessory[] = [
   {
@@ -16,7 +16,7 @@ export const accessories: Accessory[] = [
     id: 'gun-dual-temp',
     name: 'Dual-Temp PDR Glue Gun',
     category: 'glue-gun',
-    description: 'Switchable Low/High element — one gun for every glue.',
+    description: 'Switchable Low/High element, one gun for every glue.',
     purchaseLink: 'https://ansonpdr.com/products/dual-temp-glue-gun',
   },
   {

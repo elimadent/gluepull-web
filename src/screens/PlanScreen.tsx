@@ -1,57 +1,103 @@
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { BuyButton } from '@/components/BuyButton';
+import { GlueStickPlaceholder } from '@/components/GlueStickPlaceholder';
+import { ProductImageLightbox } from '@/components/ProductImageLightbox';
 import { Screen } from '@/components/Screen';
 import { Section } from '@/components/Section';
 import { SynergyStack } from '@/components/SynergyStack';
-import { TripPlanner } from '@/components/TripPlanner';
+import { useWeather } from '@/context/WeatherContext';
 import { getAnsonProduct } from '@/data/products';
 import { aggregateGluePicks } from '@/logic/recommendation';
-import {
-  fetchMultiDayForecast,
-  getLocationFromIP,
-} from '@/services/weather';
-import { DailyForecast, Glue, LocationInfo } from '@/types';
+import { fetchMultiDayForecast } from '@/services/weather';
+import { gunTempCompact, panelTempRange } from '@/utils/gunTemp';
+import { DailyForecast, Glue } from '@/types';
 
 type Horizon = 'week' | 'month';
-const DAYS: Record<Horizon, number> = { week: 7, month: 16 };
+/* Open-Meteo's free forecast caps at 16 days; days 17–30 are projected by
+ * cycling the 16-day pattern (see fetchMultiDayForecast). The user wants a
+ * full 30-day stocking horizon for "This Month". */
+const DAYS: Record<Horizon, number> = { week: 7, month: 30 };
 
-function PlanRow({ glue, days }: { glue: Glue; days: number }) {
+/** Compact horizontal row: small thumbnail left, info + buy right.
+ *  Image is bounded to ~80px so it doesn't dominate the card. */
+function PlanRow({ glue, days, totalDays }: { glue: Glue; days: number; totalDays: number }) {
   const product = getAnsonProduct(glue.id);
   const matched = product?.matched === true;
   const displayName = matched ? product.name : glue.name;
+  const imageUrl = matched ? product.imageUrl : null;
+  const dayLabel = days === 1 ? 'day' : 'days';
+  const [zoomOpen, setZoomOpen] = useState(false);
+
   return (
-    <div className="plan-row">
-      <div className="body">
-        <p className="name">{displayName}</p>
-        <p className="sub">
-          Best on {days} {days === 1 ? 'day' : 'days'} · {glue.gunTemp} gun ·{' '}
-          {glue.strength} strength
-        </p>
-      </div>
-      {matched ? (
-        <BuyButton url={product.productUrl} label="Buy" compact />
+    <article className="plan-card">
+      {imageUrl ? (
+        <button
+          type="button"
+          className="plan-card-thumb plan-card-thumb-btn"
+          onClick={() => setZoomOpen(true)}
+          aria-label={`Open large view of ${displayName}`}
+        >
+          <img src={imageUrl} alt="" loading="lazy" />
+          <span className="plan-card-zoom" aria-hidden>⤢</span>
+        </button>
       ) : (
-        <span className="not-linked">Not listed</span>
+        <div className="plan-card-thumb">
+          <GlueStickPlaceholder color={glue.color} />
+        </div>
       )}
-    </div>
+      <div className="plan-card-body">
+        <div className="plan-card-head">
+          <h3 className="plan-card-name">{displayName}</h3>
+          <span
+            className="plan-card-badge"
+            aria-label={`Top pick on ${days} of ${totalDays} ${dayLabel}`}
+            title={`Wins ${days} of ${totalDays} forecasted days`}
+          >
+            <strong>{days}</strong>
+            <span className="plan-card-badge-sub">{dayLabel}</span>
+          </span>
+        </div>
+        <p className="plan-card-meta">
+          {glue.strength} strength · Panel {panelTempRange(glue).range}
+        </p>
+        <p className="plan-card-meta">{gunTempCompact(glue.gunTemp)}</p>
+        {matched ? (
+          <BuyButton url={product.productUrl} label="Buy on Anson" compact />
+        ) : (
+          <span className="not-linked">Not listed</span>
+        )}
+      </div>
+      {zoomOpen && imageUrl ? (
+        <ProductImageLightbox
+          src={imageUrl}
+          alt={displayName}
+          onClose={() => setZoomOpen(false)}
+        />
+      ) : null}
+    </article>
   );
 }
 
+/**
+ * Job Planner, multi-day buy list keyed off the GLOBAL location set on Home.
+ *
+ * Plan no longer owns its own location state; whatever was picked on Home
+ * (auto-detect / US state / search) drives the forecast load here. If the
+ * user hasn't set a location yet we show a prompt instead of guessing.
+ */
 export function PlanScreen() {
+  const { location } = useWeather();
   const [horizon, setHorizon] = useState<Horizon>('week');
   const [days, setDays] = useState<DailyForecast[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  /** When set, the plan was built for a user-picked trip location instead of
-   *  auto-IP. Persists across horizon toggles. */
-  const [tripLocation, setTripLocation] = useState<LocationInfo | null>(null);
 
   const load = useCallback(
-    async (h: Horizon, locationOverride?: LocationInfo) => {
+    async (h: Horizon) => {
+      if (!location) return;
       setLoading(true);
       setError(null);
       try {
-        const location = locationOverride ?? (await getLocationFromIP());
         const data = await fetchMultiDayForecast(location, DAYS[h]);
         setDays(data);
       } catch (e) {
@@ -61,94 +107,53 @@ export function PlanScreen() {
         setLoading(false);
       }
     },
-    []
+    [location]
   );
 
-  const onTripPick = useCallback(
-    async (location: LocationInfo) => {
-      setTripLocation(location);
-      await load(horizon, location);
-    },
-    [horizon, load]
-  );
-
-  const clearTrip = useCallback(async () => {
-    setTripLocation(null);
-    await load(horizon);
-  }, [horizon, load]);
+  // Auto-rebuild whenever the global location changes (or first arrives).
+  useEffect(() => {
+    if (!location) {
+      setDays([]);
+      return;
+    }
+    void load(horizon);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [location, horizon]);
 
   const picks = useMemo(() => aggregateGluePicks(days), [days]);
-
+  const totalDays = days.length;
   const horizonLabel =
-    horizon === 'week' ? 'next 7 days' : `next ${days.length || 16} days`;
-  const locationLabel = tripLocation?.label ?? null;
+    horizon === 'week' ? 'next 7 days' : `next ${totalDays || 16} days`;
+  const locationLabel = location?.label ?? null;
+  const subtitle = locationLabel
+    ? `Pre-buy the right glues and tools for the ${horizonLabel} of weather at ${locationLabel}. Switch the horizon below; everything rebuilds automatically.`
+    : 'Pre-buy the right glues for the days ahead. Set a location on the Home tab and this page builds your shopping list automatically.';
 
   return (
-    <Screen
-      title="Job Planner"
-      subtitle={
-        locationLabel
-          ? `Trip plan for ${locationLabel}.`
-          : 'Pre-buy every glue and tool for the whole job.'
-      }
-      onRefresh={() => load(horizon, tripLocation ?? undefined)}
-      refreshing={loading}
-    >
+    <Screen title="Job Planner" subtitle={subtitle}>
       <div className="toggle-row">
         {(['week', 'month'] as Horizon[]).map((h) => (
           <button
             key={h}
             type="button"
             className={`toggle${horizon === h ? ' active' : ''}`}
-            onClick={() => {
-              setHorizon(h);
-              void load(h, tripLocation ?? undefined);
-            }}
+            onClick={() => setHorizon(h)}
           >
             {h === 'week' ? 'This Week' : 'This Month'}
           </button>
         ))}
       </div>
 
-      <TripPlanner
-        onPick={onTripPick}
-        activeLabel={locationLabel}
-        disabled={loading}
-      />
-      {tripLocation ? (
-        <div className="trip-clear-row">
-          <button
-            type="button"
-            className="ghost-btn"
-            onClick={clearTrip}
-            disabled={loading}
-          >
-            <span aria-hidden>↺</span>
-            <span>Back to my local plan</span>
-          </button>
-        </div>
-      ) : null}
-
-      {!days.length && !loading && !error ? (
+      {!location ? (
         <div className="welcome" style={{ marginTop: 16 }}>
-          <div className="welcome-icon" aria-hidden>
-            📅
-          </div>
-          <h2 className="welcome-title">Plan a week or a month</h2>
+          <div className="welcome-icon" aria-hidden>📍</div>
+          <h2 className="welcome-title">Set your location on Home</h2>
           <p className="welcome-copy">
-            Tap a range above and we'll pull the multi-day forecast for your
-            location, then list every glue + tool you should stock for the job.
+            Home is where you set your working location and conditions -
+            everything else in the app (including this buy list) reads from
+            there. Head to the Home tab and pick a state, search a city/zip,
+            or auto-detect.
           </p>
-          <div className="welcome-actions">
-            <button
-              type="button"
-              className="cta primary"
-              onClick={() => load(horizon, tripLocation ?? undefined)}
-            >
-              <span aria-hidden>📍</span>
-              <span>Build {horizon === 'week' ? '7-day' : 'monthly'} plan</span>
-            </button>
-          </div>
         </div>
       ) : null}
 
@@ -161,15 +166,13 @@ export function PlanScreen() {
 
       {error && !days.length ? (
         <div className="error-card">
-          <div className="icon" aria-hidden>
-            🌧
-          </div>
+          <div className="icon" aria-hidden>🌧</div>
           <div>{error}</div>
           <div className="actions">
             <button
               type="button"
               className="primary"
-              onClick={() => load(horizon, tripLocation ?? undefined)}
+              onClick={() => void load(horizon)}
             >
               Retry
             </button>
@@ -180,18 +183,20 @@ export function PlanScreen() {
       {picks.length ? (
         <Section
           title="Buy these glues"
-          subtitle={`Each row is a glue that wins the most days in your ${horizonLabel} forecast — pre-buy by how often you'll use it.`}
+          subtitle={`Each card is a glue that wins the most days in your ${horizonLabel} forecast. Buy by how often you'll actually use it.`}
         >
-          {picks.map(({ glue, days: d }) => (
-            <PlanRow key={glue.id} glue={glue} days={d} />
-          ))}
+          <div className="plan-grid">
+            {picks.map(({ glue, days: d }) => (
+              <PlanRow key={glue.id} glue={glue} days={d} totalDays={totalDays} />
+            ))}
+          </div>
         </Section>
       ) : null}
 
       {picks.length ? (
         <Section
-          title="The Synergy Stack"
-          subtitle="The right gun, tabs, tools, prep and heat to pull the glues above. Tap a category to swipe through Anson products and see exactly why each one pairs with your stick selection."
+          title="Dial In Your Pull"
+          subtitle="You've found the glue that fits the conditions. Now match it with the right gun, tabs, tools, and prep to get cleaner, stronger, more repeatable pulls."
         >
           <SynergyStack />
           <a
