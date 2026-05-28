@@ -6,10 +6,13 @@ import tsconfigPaths from 'vite-tsconfig-paths';
 // so all asset URLs need to be prefixed with /gluepull-web/. Dev server stays
 // at root (/) so HMR + local network access work as normal. Widget build
 // (vite.widget.config.ts) is unaffected — it bundles assets inline.
-const isProductionBuild = process.env.NODE_ENV === 'production';
-
-export default defineConfig({
-  base: isProductionBuild ? '/gluepull-web/' : '/',
+//
+// `mode` comes from Vite (defaults to 'production' for `vite build`,
+// 'development' for `vite dev`). Using the callback form avoids touching
+// `process.env`, which would otherwise require pulling in @types/node just
+// to satisfy `tsc --noEmit` on this file.
+export default defineConfig(({ mode }) => ({
+  base: mode === 'production' ? '/gluepull-web/' : '/',
   plugins: [react(), tsconfigPaths()],
   server: {
     host: true, // bind 0.0.0.0 so phones on the LAN can reach it
@@ -24,4 +27,4 @@ export default defineConfig({
     include: ['src/**/*.test.ts'],
     globals: true,
   },
-});
+}));
