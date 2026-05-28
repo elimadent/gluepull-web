@@ -977,12 +977,13 @@ html { scroll-behavior: smooth; }
   align-items: center;
   gap: 2px;
   color: var(--gp-text-faint);
-  font-size: 10px;
+  font-size: 9.5px;
   font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 1px;
-  padding: 6px 0;
+  letter-spacing: 0.6px;
+  padding: 6px 2px;
   min-height: 44px;
+  min-width: 0;
   transition: color 150ms ease;
 }
 .tab:hover { color: var(--gp-text-muted); }
@@ -2112,7 +2113,54 @@ body.gp-standalone {
   min-height: 44px;
 }
 
-/* About / Why GluePull — editorial hero at the top of Home */
+/* Dedicated About page — uses the same editorial typography as the old
+ * collapsible card but renders as a full screen instead. */
+.about-page {
+  margin: var(--gp-md) var(--gp-lg) 0;
+  background:
+    radial-gradient(circle at 0% 0%, rgba(212, 175, 55, 0.06) 0%, transparent 60%),
+    var(--gp-surface);
+  border: 1px solid var(--gp-border);
+  border-radius: var(--gp-r-lg);
+  padding: var(--gp-xl) var(--gp-lg) var(--gp-lg);
+  position: relative;
+  overflow: hidden;
+}
+.about-page::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: var(--gp-xl);
+  right: var(--gp-xl);
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--gp-gold), transparent);
+  opacity: 0.7;
+}
+.about-page-head {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: var(--gp-lg);
+  padding-bottom: var(--gp-md);
+  border-bottom: 1px solid var(--gp-border-soft);
+}
+.about-eyebrow {
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--gp-gold);
+}
+.about-headline {
+  font-family: var(--gp-font-display);
+  font-size: 28px;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+  line-height: 1.1;
+  color: var(--gp-cream);
+}
+
+/* (Legacy) About / Why GluePull — editorial hero at the top of Home */
 .about-card {
   margin: var(--gp-md) var(--gp-lg) 0;
   background:
