@@ -45,9 +45,15 @@ export const tipSections: TipSection[] = [
       'Moisture under the tab is the #1 killer of adhesion, especially in humid or cold air.',
       'Warm the glue tab slightly too so it flows into the scuff and grabs fully.',
     ],
-    // No featured Anson product — Anson stocks induction hotboxes, not handheld
-    // torches/heat guns. The TipsScreen falls back to a heat-gun SVG icon
-    // here so the visual matches the instruction text.
+    featured: {
+      // Anson doesn't sell standalone heat guns — but "The Claw" product
+      // photo is shot with a real heat gun mounted in it, which is the only
+      // real heat-gun photograph in the catalog and what techs will recognize.
+      name: 'The Claw — Heat Gun Mount (shown with heat gun)',
+      image:
+        'https://cdn.shopify.com/s/files/1/0499/2545/6040/products/the_claw_2.jpg',
+      url: 'https://ansonpdr.com/products/the-claw-heat-gun-mount-elimadent-tools',
+    },
   },
   {
     id: 'glue-choice',
