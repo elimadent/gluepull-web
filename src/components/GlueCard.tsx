@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { AccessoryRow } from '@/components/AccessoryRow';
-import { BuyButton } from '@/components/BuyButton';
 import { Chip } from '@/components/Chip';
 import { RankBadge } from '@/components/RankBadge';
+import { getAnsonProduct } from '@/data/products';
 import { bundleForGlue } from '@/logic/bundles';
 import { colors } from '@/theme/theme';
 import { GlueScore } from '@/types';
@@ -27,23 +27,66 @@ function Bullet({ icon, tint, text }: { icon: string; tint: string; text: string
 }
 
 export function GlueCard({ score, rank, showBundle = true }: GlueCardProps) {
-  const [open, setOpen] = useState(false);
+  const [descOpen, setDescOpen] = useState(false);
+  const [bundleOpen, setBundleOpen] = useState(false);
   const { glue, score: value, reasons, warnings } = score;
+
+  const product = getAnsonProduct(glue.id);
+  const matched = product?.matched === true;
+  const displayName = matched ? product.name : glue.name;
+  const description = matched ? product.description : null;
+  const productUrl = matched ? product.productUrl : null;
+  const imageUrl = matched ? product.imageUrl : null;
+
   const bundle = showBundle ? bundleForGlue(glue) : [];
+  const canToggleDesc = matched && !!description;
 
   return (
     <article className={`glue-card${rank === 1 ? ' top' : ''}`}>
-      <header className="glue-head">
+      <button
+        type="button"
+        className="glue-head"
+        onClick={() => canToggleDesc && setDescOpen((o) => !o)}
+        disabled={!canToggleDesc}
+        aria-expanded={canToggleDesc ? descOpen : undefined}
+      >
         {rank ? <RankBadge rank={rank} /> : null}
+        {imageUrl ? (
+          <img
+            src={imageUrl}
+            alt={`${displayName} product photo`}
+            className="product-thumb"
+            loading="lazy"
+          />
+        ) : (
+          <div className="product-thumb placeholder" aria-hidden>
+            🔥
+          </div>
+        )}
         <div className="glue-head-text">
-          <h3 className="glue-name">{glue.name}</h3>
-          <p className="glue-bestfor">{glue.bestFor}</p>
+          <h3 className="glue-name">{displayName}</h3>
+          {matched ? (
+            <>
+              <p className="glue-bestfor">{glue.bestFor}</p>
+              {canToggleDesc ? (
+                <span className="expand-hint">
+                  {descOpen ? '▲ Hide details' : '▼ Product details'}
+                </span>
+              ) : null}
+            </>
+          ) : (
+            <p className="not-linked">⚠ Not yet listed on ansonpdr.com</p>
+          )}
         </div>
         <div className="glue-score">
           <div className="glue-score-value">{value}</div>
           <div className="glue-score-label">match</div>
         </div>
-      </header>
+      </button>
+
+      {canToggleDesc && descOpen ? (
+        <div className="product-desc">{description}</div>
+      ) : null}
 
       <div className="chips">
         <Chip label={glue.color} tint={colors.accent} />
@@ -83,27 +126,42 @@ export function GlueCard({ score, rank, showBundle = true }: GlueCardProps) {
         </div>
       </div>
 
-      <BuyButton url={glue.purchaseLink} />
+      {productUrl ? (
+        <a
+          className="buy"
+          href={productUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          aria-label={`Buy ${displayName} on ansonpdr.com`}
+        >
+          <span aria-hidden>🛒</span>
+          <span>View on Anson PDR</span>
+        </a>
+      ) : (
+        <div className="buy disabled" aria-disabled="true">
+          Product not yet linked
+        </div>
+      )}
 
       {showBundle && bundle.length ? (
         <>
           <button
             type="button"
             className="bundle-toggle"
-            onClick={() => setOpen((o) => !o)}
-            aria-expanded={open}
+            onClick={() => setBundleOpen((o) => !o)}
+            aria-expanded={bundleOpen}
           >
             <span aria-hidden>📦</span>
             <span>
-              {open
+              {bundleOpen
                 ? 'Hide matching tools'
                 : `Matching tools & kit (${bundle.length})`}
             </span>
             <span className="chev" aria-hidden>
-              {open ? '▲' : '▼'}
+              {bundleOpen ? '▲' : '▼'}
             </span>
           </button>
-          {open
+          {bundleOpen
             ? bundle.map((acc) => <AccessoryRow key={acc.id} accessory={acc} />)
             : null}
         </>

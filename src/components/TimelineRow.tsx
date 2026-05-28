@@ -1,3 +1,4 @@
+import { getAnsonProduct } from '@/data/products';
 import { BlockRecommendation } from '@/types';
 
 interface TimelineRowProps {
@@ -16,6 +17,9 @@ const BLOCK_ICON: Record<string, string> = {
 export function TimelineRow({ recommendation, onPress, active }: TimelineRowProps) {
   const { block, conditions, ranked } = recommendation;
   const top = ranked[0];
+  const product = top ? getAnsonProduct(top.glue.id) : undefined;
+  const displayName =
+    top && product?.matched ? product.name : top ? top.glue.name : 'No data';
 
   return (
     <button
@@ -37,7 +41,7 @@ export function TimelineRow({ recommendation, onPress, active }: TimelineRowProp
       </div>
       <div className="glue-col">
         <span className="use-label">BEST GLUE</span>
-        <p className="glue-name-sm">{top ? top.glue.name : 'No data'}</p>
+        <p className="glue-name-sm">{displayName}</p>
         {top ? (
           <p className="match">
             {top.score} match · {top.glue.gunTemp} gun

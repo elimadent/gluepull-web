@@ -4,6 +4,7 @@ import { BuyButton } from '@/components/BuyButton';
 import { Screen } from '@/components/Screen';
 import { Section } from '@/components/Section';
 import { useWeather } from '@/context/WeatherContext';
+import { getAnsonProduct } from '@/data/products';
 import { bundleForGlues } from '@/logic/bundles';
 import { aggregateGluePicks } from '@/logic/recommendation';
 import { fetchMultiDayForecast, getCurrentLocation } from '@/services/weather';
@@ -13,16 +14,23 @@ type Horizon = 'week' | 'month';
 const DAYS: Record<Horizon, number> = { week: 7, month: 16 };
 
 function PlanRow({ glue, days }: { glue: Glue; days: number }) {
+  const product = getAnsonProduct(glue.id);
+  const matched = product?.matched === true;
+  const displayName = matched ? product.name : glue.name;
   return (
     <div className="plan-row">
       <div className="body">
-        <p className="name">{glue.name}</p>
+        <p className="name">{displayName}</p>
         <p className="sub">
           Best on {days} {days === 1 ? 'day' : 'days'} · {glue.gunTemp} gun ·{' '}
           {glue.strength} strength
         </p>
       </div>
-      <BuyButton url={glue.purchaseLink} label="Buy" compact />
+      {matched ? (
+        <BuyButton url={product.productUrl} label="Buy" compact />
+      ) : (
+        <span className="not-linked">Not listed</span>
+      )}
     </div>
   );
 }
