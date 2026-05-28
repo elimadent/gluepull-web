@@ -1,18 +1,15 @@
 import { useState } from 'react';
-import { AccessoryRow } from '@/components/AccessoryRow';
 import { Chip } from '@/components/Chip';
 import { RankBadge } from '@/components/RankBadge';
 import { getAnsonProduct } from '@/data/products';
-import { bundleForGlue } from '@/logic/bundles';
 import { colors } from '@/theme/theme';
+import { linkTarget } from '@/utils/link';
 import { GlueScore } from '@/types';
 
 interface GlueCardProps {
   score: GlueScore;
   /** When set, shows a #1/#2/#3 medal badge. */
   rank?: number;
-  /** Show the expandable "matching tools" bundle. Default true. */
-  showBundle?: boolean;
 }
 
 function Bullet({ icon, tint, text }: { icon: string; tint: string; text: string }) {
@@ -26,9 +23,8 @@ function Bullet({ icon, tint, text }: { icon: string; tint: string; text: string
   );
 }
 
-export function GlueCard({ score, rank, showBundle = true }: GlueCardProps) {
+export function GlueCard({ score, rank }: GlueCardProps) {
   const [descOpen, setDescOpen] = useState(false);
-  const [bundleOpen, setBundleOpen] = useState(false);
   const { glue, score: value, reasons, warnings } = score;
 
   const product = getAnsonProduct(glue.id);
@@ -37,8 +33,6 @@ export function GlueCard({ score, rank, showBundle = true }: GlueCardProps) {
   const description = matched ? product.description : null;
   const productUrl = matched ? product.productUrl : null;
   const imageUrl = matched ? product.imageUrl : null;
-
-  const bundle = showBundle ? bundleForGlue(glue) : [];
   const canToggleDesc = matched && !!description;
 
   return (
@@ -130,42 +124,18 @@ export function GlueCard({ score, rank, showBundle = true }: GlueCardProps) {
         <a
           className="buy"
           href={productUrl}
-          target="_blank"
+          target={linkTarget(productUrl)}
           rel="noopener noreferrer"
           aria-label={`Buy ${displayName} on ansonpdr.com`}
         >
           <span aria-hidden>🛒</span>
-          <span>View on Anson PDR</span>
+          <span>Buy on Anson PDR</span>
         </a>
       ) : (
         <div className="buy disabled" aria-disabled="true">
           Product not yet linked
         </div>
       )}
-
-      {showBundle && bundle.length ? (
-        <>
-          <button
-            type="button"
-            className="bundle-toggle"
-            onClick={() => setBundleOpen((o) => !o)}
-            aria-expanded={bundleOpen}
-          >
-            <span aria-hidden>📦</span>
-            <span>
-              {bundleOpen
-                ? 'Hide matching tools'
-                : `Matching tools & kit (${bundle.length})`}
-            </span>
-            <span className="chev" aria-hidden>
-              {bundleOpen ? '▲' : '▼'}
-            </span>
-          </button>
-          {bundleOpen
-            ? bundle.map((acc) => <AccessoryRow key={acc.id} accessory={acc} />)
-            : null}
-        </>
-      ) : null}
     </article>
   );
 }

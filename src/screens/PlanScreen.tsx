@@ -7,7 +7,7 @@ import { useWeather } from '@/context/WeatherContext';
 import { getAnsonProduct } from '@/data/products';
 import { bundleForGlues } from '@/logic/bundles';
 import { aggregateGluePicks } from '@/logic/recommendation';
-import { fetchMultiDayForecast, getCurrentLocation } from '@/services/weather';
+import { fetchMultiDayForecast, getLocationFromIP } from '@/services/weather';
 import { DailyForecast, Glue } from '@/types';
 
 type Horizon = 'week' | 'month';
@@ -46,7 +46,7 @@ export function PlanScreen() {
     setLoading(true);
     setError(null);
     try {
-      const location = await getCurrentLocation();
+      const location = await getLocationFromIP();
       const data = await fetchMultiDayForecast(location, DAYS[h]);
       setDays(data);
     } catch (e) {

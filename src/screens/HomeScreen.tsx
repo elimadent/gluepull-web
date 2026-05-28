@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { ComparisonGrid } from '@/components/ComparisonGrid';
 import { ConditionStats } from '@/components/ConditionStats';
 import { GlueCard } from '@/components/GlueCard';
 import { Screen } from '@/components/Screen';
@@ -20,14 +21,6 @@ function currentConditions(forecast: DailyForecast): WeatherConditions {
   };
 }
 
-const isInsecureContext = (): boolean => {
-  if (typeof window === 'undefined') return false;
-  const { protocol, hostname } = window.location;
-  if (protocol === 'https:') return false;
-  if (hostname === 'localhost' || hostname === '127.0.0.1') return false;
-  return true;
-};
-
 interface HomeProps {
   onGoManual: () => void;
 }
@@ -37,8 +30,10 @@ export function HomeScreen({ onGoManual }: HomeProps) {
     forecast,
     loading,
     error,
-    attemptedAutoLocation,
-    refreshFromLocation,
+    attempted,
+    canRefineWithGPS,
+    refreshFromIP,
+    refineWithGPS,
   } = useWeather();
   const [selectedBlockId, setSelectedBlockId] = useState<string | null>(null);
 
@@ -61,48 +56,9 @@ export function HomeScreen({ onGoManual }: HomeProps) {
     <Screen
       title="GluePull"
       subtitle={subtitle}
-      onRefresh={forecast ? refreshFromLocation : undefined}
+      onRefresh={forecast ? refreshFromIP : undefined}
       refreshing={loading}
     >
-      {!forecast && !loading ? (
-        <div className="welcome">
-          <div className="welcome-icon" aria-hidden>
-            🌡️
-          </div>
-          <h2 className="welcome-title">Get today's glue picks</h2>
-          <p className="welcome-copy">
-            Match the right Anson PDR hot glue to today's weather. Use your
-            location for the live forecast, or punch in conditions by hand.
-          </p>
-
-          <div className="welcome-actions">
-            <button
-              type="button"
-              className="cta primary"
-              onClick={refreshFromLocation}
-            >
-              <span aria-hidden>📍</span>
-              <span>Use my location</span>
-            </button>
-            <button type="button" className="cta secondary" onClick={onGoManual}>
-              <span aria-hidden>✏️</span>
-              <span>Enter conditions manually</span>
-            </button>
-          </div>
-
-          {isInsecureContext() ? (
-            <p className="welcome-hint">
-              Heads up: your browser may block location requests over plain HTTP.
-              Manual Entry always works.
-            </p>
-          ) : null}
-
-          {error && attemptedAutoLocation ? (
-            <p className="welcome-hint warn">⚠ {error}</p>
-          ) : null}
-        </div>
-      ) : null}
-
       {loading && !forecast ? (
         <div className="center-stack">
           <div className="spinner" />
@@ -110,21 +66,63 @@ export function HomeScreen({ onGoManual }: HomeProps) {
         </div>
       ) : null}
 
+      {!forecast && !loading && attempted && error ? (
+        <div className="welcome">
+          <div className="welcome-icon" aria-hidden>
+            🌧
+          </div>
+          <h2 className="welcome-title">Couldn't load your weather</h2>
+          <p className="welcome-copy">{error}</p>
+          <div className="welcome-actions">
+            <button type="button" className="cta primary" onClick={refreshFromIP}>
+              <span aria-hidden>↻</span>
+              <span>Try again</span>
+            </button>
+            <button type="button" className="cta secondary" onClick={onGoManual}>
+              <span aria-hidden>✏️</span>
+              <span>Enter conditions manually</span>
+            </button>
+          </div>
+        </div>
+      ) : null}
+
       {current ? (
         <Section title="Current Conditions">
           <ConditionStats conditions={current} />
           {error ? <p className="inline-warn">{error}</p> : null}
+          <div className="location-actions">
+            {canRefineWithGPS ? (
+              <button
+                type="button"
+                className="ghost-btn"
+                onClick={refineWithGPS}
+                disabled={loading}
+              >
+                <span aria-hidden>📍</span>
+                <span>Use precise location</span>
+              </button>
+            ) : null}
+            <button type="button" className="ghost-btn" onClick={onGoManual}>
+              <span aria-hidden>✏️</span>
+              <span>Override manually</span>
+            </button>
+          </div>
         </Section>
       ) : null}
 
       {topNow.length ? (
         <Section
-          title="Recommended Right Now"
-          subtitle={
-            topNow.length > 1
-              ? 'Ranked best-first for current conditions.'
-              : 'Best match for current conditions.'
-          }
+          title="Top 3 picks — compared"
+          subtitle="Tap a card below for full pros, cons, and product details."
+        >
+          <ComparisonGrid picks={topNow} />
+        </Section>
+      ) : null}
+
+      {topNow.length ? (
+        <Section
+          title="Full breakdown"
+          subtitle="Same picks, with the reasons, warnings, pros and cons."
         >
           {topNow.map((s, i) => (
             <GlueCard key={s.glue.id} score={s} rank={i + 1} />
@@ -159,9 +157,7 @@ export function HomeScreen({ onGoManual }: HomeProps) {
             selected.conditions.humidity
           )}% RH`}
         >
-          {selected.ranked.map((s, i) => (
-            <GlueCard key={s.glue.id} score={s} rank={i + 1} />
-          ))}
+          <ComparisonGrid picks={selected.ranked} />
         </Section>
       ) : null}
     </Screen>

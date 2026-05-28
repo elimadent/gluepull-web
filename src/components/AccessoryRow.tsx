@@ -1,3 +1,4 @@
+import { linkTarget } from '@/utils/link';
 import { Accessory, AccessoryCategory } from '@/types';
 
 const ICON_BY_CATEGORY: Record<AccessoryCategory, string> = {
@@ -16,7 +17,7 @@ export function AccessoryRow({ accessory }: { accessory: Accessory }) {
     <a
       className="accessory"
       href={accessory.purchaseLink}
-      target="_blank"
+      target={linkTarget(accessory.purchaseLink)}
       rel="noopener noreferrer"
       aria-label={`${accessory.name} — open on ansonpdr.com`}
     >

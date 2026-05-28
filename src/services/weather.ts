@@ -1,13 +1,21 @@
 import { DailyForecast, LocationInfo, WeatherSnapshot } from '@/types';
 
 /*
- * Web port of services/weather.ts. The Open-Meteo fetch logic is byte-identical
- * with the RN version; the location call swaps expo-location for the browser
- * Geolocation API (no permission popup outside an HTTPS / localhost context —
- * on a LAN IP iOS Safari still allows it on first request).
+ * Web port of services/weather.ts.
+ *
+ * Two ways to resolve where the user is:
+ *   1. IP geolocation (ipapi.co)  — no permission prompt, no HTTPS requirement
+ *      for the page, city-level accuracy. The default path because for a
+ *      glue-picker keyed to the local weather, city accuracy is plenty.
+ *   2. Browser Geolocation API    — precise GPS, but only available on a
+ *      secure context (HTTPS or localhost) and requires user permission.
+ *      Used as an opt-in "refine my location" upgrade.
+ *
+ * The Open-Meteo fetch logic below is byte-identical to the RN version.
  */
 
 const OPEN_METEO_URL = 'https://api.open-meteo.com/v1/forecast';
+const IP_LOCATION_URL = 'https://ipapi.co/json/';
 
 interface OpenMeteoResponse {
   hourly?: {
@@ -19,18 +27,70 @@ interface OpenMeteoResponse {
   timezone?: string;
 }
 
+interface IpapiResponse {
+  latitude?: number;
+  longitude?: number;
+  city?: string;
+  region_code?: string;
+  region?: string;
+  country_code?: string;
+  error?: boolean;
+  reason?: string;
+}
+
 const todayISO = (): string => new Date().toISOString().slice(0, 10);
 
 /**
- * Request browser geolocation and return the device coordinates.
- * Throws with a user-facing message if permission is denied or unavailable.
+ * Whether the browser Geolocation API can actually be called here. Outside a
+ * secure context (HTTPS, localhost) modern browsers either reject the prompt
+ * or quietly fail — better to know upfront so the UI hides the GPS button.
+ */
+export function geolocationAvailable(): boolean {
+  if (typeof window === 'undefined') return false;
+  if (!('geolocation' in navigator)) return false;
+  const { protocol, hostname } = window.location;
+  if (protocol === 'https:') return true;
+  return hostname === 'localhost' || hostname === '127.0.0.1';
+}
+
+/**
+ * Look up the visitor's location from their IP. No permission prompt, works
+ * on HTTP pages (the fetch is auto-upgraded to HTTPS by modern browsers).
+ * Returns city + region as a friendly label.
+ */
+export async function getLocationFromIP(): Promise<LocationInfo> {
+  const res = await fetch(IP_LOCATION_URL, {
+    headers: { Accept: 'application/json' },
+  });
+  if (!res.ok) {
+    throw new Error('Could not look up your location. Try Manual Entry.');
+  }
+  const data: IpapiResponse = await res.json();
+  if (
+    data.error ||
+    typeof data.latitude !== 'number' ||
+    typeof data.longitude !== 'number'
+  ) {
+    throw new Error(data.reason || 'Could not look up your location. Try Manual Entry.');
+  }
+  return {
+    latitude: data.latitude,
+    longitude: data.longitude,
+    label: [data.city, data.region_code || data.region].filter(Boolean).join(', '),
+  };
+}
+
+/**
+ * Request precise browser-level location (GPS). Only call this in a secure
+ * context (use `geolocationAvailable()` to gate). Throws with a user-facing
+ * message on denial or unavailability.
  */
 export function getCurrentLocation(): Promise<LocationInfo> {
   return new Promise((resolve, reject) => {
-    if (!('geolocation' in navigator)) {
+    if (!geolocationAvailable()) {
       reject(
         new Error(
-          'This browser does not support geolocation. Use Manual Entry.'
+          'Precise location needs an HTTPS connection. Using approximate location instead.'
         )
       );
       return;
@@ -45,8 +105,8 @@ export function getCurrentLocation(): Promise<LocationInfo> {
       (err) => {
         const msg =
           err.code === err.PERMISSION_DENIED
-            ? 'Location permission denied. Allow it in your browser or use Manual Entry.'
-            : 'Could not get your location. Try Manual Entry.';
+            ? 'Precise location denied. Using approximate location instead.'
+            : 'Could not get your precise location.';
         reject(new Error(msg));
       },
       { enableHighAccuracy: false, timeout: 15000, maximumAge: 60_000 }
@@ -92,12 +152,6 @@ export async function fetchDailyForecast(
   }));
 
   return { location, hourly, date, source: 'forecast' };
-}
-
-/** Convenience: resolve location and fetch the forecast in one call. */
-export async function getForecastForCurrentLocation(): Promise<DailyForecast> {
-  const location = await getCurrentLocation();
-  return fetchDailyForecast(location);
 }
 
 /**

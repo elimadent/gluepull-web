@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { ComparisonGrid } from '@/components/ComparisonGrid';
 import { GlueCard } from '@/components/GlueCard';
 import { Screen } from '@/components/Screen';
 import { Section } from '@/components/Section';
@@ -153,18 +154,19 @@ export function ManualEntryScreen() {
       </form>
 
       {results ? (
-        <Section
-          title="Recommended Glues"
-          subtitle={
-            results.length > 1
-              ? 'Ranked best-first for the conditions you entered.'
-              : 'Best match for the conditions you entered.'
-          }
-        >
-          {results.map((s, i) => (
-            <GlueCard key={s.glue.id} score={s} rank={i + 1} />
-          ))}
-        </Section>
+        <>
+          <Section
+            title="Top 3 picks — compared"
+            subtitle="Tap any card below for full pros, cons, and product details."
+          >
+            <ComparisonGrid picks={results} />
+          </Section>
+          <Section title="Full breakdown">
+            {results.map((s, i) => (
+              <GlueCard key={s.glue.id} score={s} rank={i + 1} />
+            ))}
+          </Section>
+        </>
       ) : null}
     </Screen>
   );
