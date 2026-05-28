@@ -1,63 +1,72 @@
 import { useState } from 'react';
-import { Chip } from '@/components/Chip';
 import { GlueStickPlaceholder } from '@/components/GlueStickPlaceholder';
 import { RankBadge } from '@/components/RankBadge';
 import { getAnsonProduct } from '@/data/products';
 import { colors } from '@/theme/theme';
 import { linkTarget } from '@/utils/link';
-import { Glue, GlueScore } from '@/types';
+import { Glue } from '@/types';
 
 /**
- * Translate the dataset's optimalTemp/optimalHumidity/strength into the
- * shop-friendly "what panel conditions is this best for" lines that show
- * inline on every glue card.
+ * Chart-style glue card. Every glue has the same labeled sections in the same
+ * order so a tech can scan and compare across cards predictably:
+ *
+ *   1. Header — rank · photo · name · tagline · (toggle product details)
+ *   2. SPECS — strength / gun / pull method / temp / humidity (static)
+ *   3. MATCH — current-condition reasons + warnings (dynamic per pick)
+ *   4. WHERE IT SHINES — best panel / humidity / damage type
+ *   5. PROS / CONS
+ *   6. Buy CTA
  */
-function bestPanelConditions(g: Glue): string[] {
-  const lines: string[] = [];
+
+/** Best-panel-conditions narrative derived from the dataset's range + tier. */
+function bestPanelConditions(g: Glue): {
+  climate: string;
+  humidity: string;
+  damage: string;
+} {
   const tMid = (g.optimalTemp.min + g.optimalTemp.max) / 2;
-  if (tMid >= 95) lines.push('☀️ Sun-baked panels — runs through summer heat without softening');
-  else if (tMid >= 80) lines.push('🌤️ Warm panels & outdoor shade in summer');
-  else if (tMid >= 70) lines.push('🏢 Indoor shop / mild outdoor — the daily-driver window');
-  else if (tMid >= 60) lines.push('⛅ Cool mornings & shoulder seasons');
-  else lines.push('❄️ Cold panels — winter mornings, refrigerated shops');
+  let climate: string;
+  if (tMid >= 95) climate = '☀️ Sun-baked summer panels';
+  else if (tMid >= 80) climate = '🌤️ Warm panels & outdoor shade in summer';
+  else if (tMid >= 70) climate = '🏢 Indoor shop / mild outdoor — daily-driver';
+  else if (tMid >= 60) climate = '⛅ Cool mornings & shoulder seasons';
+  else climate = '❄️ Cold panels — winter mornings, refrigerated shops';
 
-  if (g.optimalHumidity.max <= 40) lines.push('🏜 Best in dry air — desert / arid climates');
-  else if (g.optimalHumidity.min >= 55) lines.push('💧 Holds up in humid air — Gulf coast, summer monsoons');
-  else lines.push('🌫 Comfortable across an average humidity range');
+  let humidity: string;
+  if (g.optimalHumidity.max <= 40)
+    humidity = '🏜 Dry air — desert / arid climates';
+  else if (g.optimalHumidity.min >= 55)
+    humidity = '💧 Humid air — Gulf coast, summer monsoons';
+  else humidity = '🌫 Average humidity';
 
-  if (g.strength === 'Super High') {
-    lines.push('💪 Lateral tension / collision damage — big high-tension dents');
-  } else if (g.strength === 'High') {
-    lines.push('🔨 Slide-hammer pulls on medium-to-large dents');
-  } else {
-    lines.push('🪶 Small dings, finish passes, clean release on factory paint');
-  }
-  return lines;
+  let damage: string;
+  if (g.strength === 'Super High')
+    damage = '💪 Lateral tension / collision — big high-tension dents';
+  else if (g.strength === 'High')
+    damage = '🔨 Slide-hammer pulls on medium-to-large dents';
+  else
+    damage = '🪶 Small dings, finish passes, clean release on factory paint';
+
+  return { climate, humidity, damage };
 }
 
-// NOTE: glue.color (Nude/Brown/Black/etc) intentionally not rendered as a chip
-// any more — it's already visible in the product photo and the product name.
+function methodLabel(m: Glue['pullMethod']): string {
+  return m === 'both' ? 'Slide-hammer + mini-lifter' : m === 'slide-hammer' ? 'Slide-hammer' : 'Mini-lifter';
+}
 
 interface GlueCardProps {
-  score: GlueScore;
+  glue: Glue;
   /** When set, shows a #1/#2/#3 medal badge. */
   rank?: number;
+  /** Optional per-current-conditions reasons & warnings. Omit on the Library
+   *  screen — the catalog should be static (no live scoring against weather). */
+  match?: { reasons: string[]; warnings: string[] };
 }
 
-function Bullet({ icon, tint, text }: { icon: string; tint: string; text: string }) {
-  return (
-    <div className="bullet">
-      <span className="icon" style={{ color: tint }} aria-hidden>
-        {icon}
-      </span>
-      <span>{text}</span>
-    </div>
-  );
-}
-
-export function GlueCard({ score, rank }: GlueCardProps) {
+export function GlueCard({ glue, rank, match }: GlueCardProps) {
   const [descOpen, setDescOpen] = useState(false);
-  const { glue, reasons, warnings } = score;
+  const reasons = match?.reasons ?? [];
+  const warnings = match?.warnings ?? [];
 
   const product = getAnsonProduct(glue.id);
   const matched = product?.matched === true;
@@ -67,11 +76,16 @@ export function GlueCard({ score, rank }: GlueCardProps) {
   const imageUrl = matched ? product.imageUrl : null;
   const canToggleDesc = matched && !!description;
 
+  const tempRange = glue.publishedTempRange ?? glue.optimalTemp;
+  const tempNote = glue.publishedTempRange ? '(maker-published)' : '';
+  const { climate, humidity, damage } = bestPanelConditions(glue);
+
   return (
     <article
       id={`gp-glue-${glue.id}`}
       className={`glue-card${rank === 1 ? ' top' : ''}`}
     >
+      {/* Header */}
       <button
         type="button"
         className="glue-head"
@@ -111,52 +125,90 @@ export function GlueCard({ score, rank }: GlueCardProps) {
         <div className="product-desc">{description}</div>
       ) : null}
 
-      <div className="chips">
-        <Chip label={`${glue.strength} strength`} />
-        <Chip label={`${glue.gunTemp} gun`} />
-        <Chip label={glue.pullMethod} />
-      </div>
+      {/* Section 1: Specs */}
+      <section className="glue-section">
+        <h4 className="glue-section-head">Specs</h4>
+        <dl className="spec-grid">
+          <dt>Strength</dt>
+          <dd>{glue.strength}</dd>
+          <dt>Gun Temp</dt>
+          <dd>{glue.gunTemp}</dd>
+          <dt>Pull Method</dt>
+          <dd>{methodLabel(glue.pullMethod)}</dd>
+          <dt>Temp Range</dt>
+          <dd>
+            {tempRange.min}–{tempRange.max}°F
+            {tempNote ? <span className="spec-note"> {tempNote}</span> : null}
+          </dd>
+          <dt>Humidity</dt>
+          <dd>{glue.optimalHumidity.min}–{glue.optimalHumidity.max}%</dd>
+        </dl>
+      </section>
 
-      <div className="best-for-panel">
-        <div className="best-for-label">Best Panel Conditions</div>
-        <ul className="best-for-list">
-          {bestPanelConditions(glue).map((line, i) => (
-            <li key={i}>{line}</li>
-          ))}
-        </ul>
-      </div>
-
-      {reasons.length ? (
-        <div className="bullets">
-          {reasons.map((r, i) => (
-            <Bullet key={`r${i}`} icon="✓" tint={colors.good} text={r} />
-          ))}
-        </div>
+      {/* Section 2: Match notes (dynamic) — only shown when match data passed */}
+      {match && (reasons.length || warnings.length) ? (
+        <section className="glue-section">
+          <h4 className="glue-section-head">Match Notes</h4>
+          <ul className="match-list">
+            {reasons.map((r, i) => (
+              <li key={`r${i}`}>
+                <span className="bullet-icon good" style={{ color: colors.good }} aria-hidden>✓</span>
+                <span>{r}</span>
+              </li>
+            ))}
+            {warnings.map((w, i) => (
+              <li key={`w${i}`}>
+                <span className="bullet-icon warn" style={{ color: colors.warn }} aria-hidden>⚠</span>
+                <span>{w}</span>
+              </li>
+            ))}
+          </ul>
+        </section>
       ) : null}
 
-      {warnings.length ? (
-        <div className="bullets">
-          {warnings.map((w, i) => (
-            <Bullet key={`w${i}`} icon="⚠" tint={colors.warn} text={w} />
-          ))}
-        </div>
-      ) : null}
+      {/* Section 3: Where it shines */}
+      <section className="glue-section">
+        <h4 className="glue-section-head">Where It Shines</h4>
+        <dl className="spec-grid">
+          <dt>Climate</dt>
+          <dd>{climate}</dd>
+          <dt>Humidity</dt>
+          <dd>{humidity}</dd>
+          <dt>Best For</dt>
+          <dd>{damage}</dd>
+        </dl>
+      </section>
 
-      <div className="pros-cons">
-        <div>
-          <h4 className="good">PROS</h4>
-          {glue.pros.map((p, i) => (
-            <Bullet key={`p${i}`} icon="+" tint={colors.good} text={p} />
-          ))}
+      {/* Section 4: Pros / Cons */}
+      <section className="glue-section">
+        <h4 className="glue-section-head">Pros &amp; Cons</h4>
+        <div className="pros-cons">
+          <div>
+            <h5 className="pc-head good">PROS</h5>
+            <ul className="pc-list">
+              {glue.pros.map((p, i) => (
+                <li key={`p${i}`}>
+                  <span className="bullet-icon" style={{ color: colors.good }} aria-hidden>+</span>
+                  <span>{p}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+          <div>
+            <h5 className="pc-head bad">CONS</h5>
+            <ul className="pc-list">
+              {glue.cons.map((c, i) => (
+                <li key={`c${i}`}>
+                  <span className="bullet-icon" style={{ color: colors.bad }} aria-hidden>−</span>
+                  <span>{c}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
         </div>
-        <div>
-          <h4 className="bad">CONS</h4>
-          {glue.cons.map((c, i) => (
-            <Bullet key={`c${i}`} icon="−" tint={colors.bad} text={c} />
-          ))}
-        </div>
-      </div>
+      </section>
 
+      {/* Section 5: Buy */}
       {productUrl ? (
         <a
           className="buy"

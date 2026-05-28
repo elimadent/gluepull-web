@@ -200,7 +200,12 @@ export function HomeScreen() {
           subtitle="Same picks, with the reasons, warnings, pros and cons."
         >
           {topNow.map((s, i) => (
-            <GlueCard key={s.glue.id} score={s} rank={i + 1} />
+            <GlueCard
+              key={s.glue.id}
+              glue={s.glue}
+              rank={i + 1}
+              match={{ reasons: s.reasons, warnings: s.warnings }}
+            />
           ))}
         </Section>
       ) : null}

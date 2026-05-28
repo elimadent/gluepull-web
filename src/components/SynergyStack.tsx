@@ -25,9 +25,18 @@ function CategoryAccordion({ category }: { category: SynergyCategory }) {
   return (
     <details className="synergy-cat">
       <summary>
-        <span className="synergy-icon" aria-hidden>
-          {category.icon}
-        </span>
+        {lead ? (
+          <img
+            src={lead.image}
+            alt=""
+            className="synergy-icon-img"
+            loading="lazy"
+          />
+        ) : (
+          <span className="synergy-icon" aria-hidden>
+            {category.icon}
+          </span>
+        )}
         <span className="synergy-head-text">
           <span className="synergy-cat-label">{category.label}</span>
           <span className="synergy-cat-role">{category.role}</span>
