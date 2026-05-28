@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Chip } from '@/components/Chip';
+import { GlueStickPlaceholder } from '@/components/GlueStickPlaceholder';
 import { RankBadge } from '@/components/RankBadge';
 import { getAnsonProduct } from '@/data/products';
 import { colors } from '@/theme/theme';
@@ -87,9 +88,7 @@ export function GlueCard({ score, rank }: GlueCardProps) {
             loading="lazy"
           />
         ) : (
-          <div className="product-thumb placeholder" aria-hidden>
-            🔥
-          </div>
+          <GlueStickPlaceholder color={glue.color} className="product-thumb placeholder-svg" />
         )}
         <div className="glue-head-text">
           <h3 className="glue-name">{displayName}</h3>

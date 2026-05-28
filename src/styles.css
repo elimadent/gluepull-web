@@ -1912,6 +1912,207 @@ body.gp-standalone {
   color: var(--gp-text);
 }
 
+/* Home conditions card — slider + stepper pairs, always visible */
+.conditions-card {
+  margin-top: var(--gp-sm);
+  background: var(--gp-surface);
+  border: 1px solid var(--gp-border);
+  border-radius: var(--gp-r-lg);
+  padding: var(--gp-lg);
+  display: flex;
+  flex-direction: column;
+  gap: var(--gp-xl);
+}
+.detect-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--gp-sm);
+  width: 100%;
+  background: #050505;
+  color: var(--gp-gold-bright);
+  border: 1.5px solid var(--gp-gold);
+  font-weight: 800;
+  font-size: var(--gp-fs-sm);
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+  min-height: 44px;
+  border-radius: var(--gp-r-md);
+  cursor: pointer;
+  transition: background-color 150ms ease, color 150ms ease, box-shadow 150ms ease;
+}
+.detect-btn:hover:not(:disabled) {
+  background: #0c0c0c;
+  border-color: var(--gp-gold-bright);
+  box-shadow: inset 0 0 0 1px var(--gp-gold-bright), 0 0 24px rgba(212, 175, 55, 0.2);
+}
+.detect-btn:disabled { opacity: 0.55; cursor: progress; }
+
+.cond-field {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.cond-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--gp-md);
+}
+.cond-label-text {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--gp-cream);
+  font-family: var(--gp-font-body);
+  font-size: var(--gp-fs-xs);
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 1.4px;
+}
+.cond-value {
+  font-family: var(--gp-font-display);
+  font-size: var(--gp-fs-xl);
+  font-weight: 700;
+  color: var(--gp-gold);
+  letter-spacing: 0.2px;
+  line-height: 1;
+}
+.cond-stepper-row {
+  display: flex;
+  justify-content: flex-end;
+}
+
+/* Stepper — [ − ][ 42 ][ + ] °F */
+.stepper {
+  display: inline-flex;
+  align-items: stretch;
+  background: var(--gp-bg);
+  border: 1px solid var(--gp-border);
+  border-radius: var(--gp-r-md);
+  overflow: hidden;
+  height: 40px;
+}
+.stepper-btn {
+  width: 40px;
+  background: var(--gp-surface-alt);
+  color: var(--gp-gold-bright);
+  border: 0;
+  font-size: 20px;
+  font-weight: 800;
+  line-height: 1;
+  cursor: pointer;
+  transition: background-color 120ms ease, color 120ms ease;
+}
+.stepper-btn:hover {
+  background: var(--gp-gold);
+  color: #050505;
+}
+.stepper-btn:active {
+  background: var(--gp-gold-dark);
+}
+.stepper-input {
+  width: 5ch;
+  text-align: center;
+  background: transparent;
+  border: 0;
+  outline: 0;
+  color: var(--gp-text);
+  font-family: var(--gp-font-display);
+  font-size: var(--gp-fs-lg);
+  font-weight: 700;
+  padding: 0 4px;
+  -webkit-appearance: none;
+  appearance: none;
+}
+.stepper-unit {
+  display: inline-flex;
+  align-items: center;
+  padding: 0 var(--gp-md) 0 4px;
+  color: var(--gp-text-muted);
+  font-size: var(--gp-fs-xs);
+  font-weight: 800;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  border-left: 1px solid var(--gp-border-soft);
+}
+
+/* Trip planner extras */
+.trip-state-row {
+  display: flex;
+  gap: 6px;
+  align-items: stretch;
+}
+.trip-state-row .trip-select { flex: 1; }
+.trip-use-state {
+  width: auto;
+  padding: 0 var(--gp-md);
+  min-height: 44px;
+  font-size: var(--gp-fs-xs);
+  letter-spacing: 1px;
+}
+.trip-search {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: var(--gp-sm);
+}
+.trip-search-hint {
+  color: var(--gp-text-faint);
+  font-size: var(--gp-fs-xs);
+  font-style: italic;
+}
+.trip-results {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  background: var(--gp-bg);
+  border: 1px solid var(--gp-border);
+  border-radius: var(--gp-r-sm);
+  overflow: hidden;
+}
+.trip-results li + li {
+  border-top: 1px solid var(--gp-border-soft);
+}
+.trip-result-btn {
+  width: 100%;
+  text-align: left;
+  background: transparent;
+  border: 0;
+  padding: 10px 12px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--gp-sm);
+  color: var(--gp-cream);
+  font-size: var(--gp-fs-sm);
+  cursor: pointer;
+  transition: background-color 120ms ease;
+}
+.trip-result-btn:hover {
+  background: var(--gp-surface-alt);
+  color: var(--gp-gold-bright);
+}
+.trip-result-name {
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.trip-result-zip {
+  color: var(--gp-text-faint);
+  font-size: var(--gp-fs-xs);
+  letter-spacing: 0.5px;
+}
+.trip-clear-row {
+  margin: var(--gp-md) var(--gp-lg) 0;
+  display: flex;
+  justify-content: flex-end;
+}
+
+/* Tab icons are SVGs now, not emoji — let the existing color logic drive them */
+.tab svg.tab-icon { stroke: currentColor; }
+
 /* Synergy Stack — per-category collapsibles + horizontal product carousel */
 .synergy-stack {
   display: flex;

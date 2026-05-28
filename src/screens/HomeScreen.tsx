@@ -1,6 +1,5 @@
 import { useMemo } from 'react';
 import { ComparisonGrid } from '@/components/ComparisonGrid';
-import { ConditionStats } from '@/components/ConditionStats';
 import { GlueCard } from '@/components/GlueCard';
 import { Screen } from '@/components/Screen';
 import { Section } from '@/components/Section';
@@ -13,124 +12,178 @@ import {
   topRecommendations,
   VIABLE_THRESHOLD,
 } from '@/logic/recommendation';
-import { BlockRecommendation, DailyForecast, WeatherConditions } from '@/types';
+import { BlockRecommendation, DailyForecast } from '@/types';
 
-function currentConditions(forecast: DailyForecast): WeatherConditions {
-  const hour = new Date().getHours();
-  const exact = forecast.hourly.find((h) => h.hour === hour);
-  const snap = exact ?? forecast.hourly[0];
-  return {
-    temperatureF: snap.temperatureF,
-    humidity: snap.humidity,
-    pressureHpa: snap.pressureHpa,
-  };
-}
-
-/**
- * Build a BlockRecommendation per time block that includes EVERY viable
- * glue for that block's conditions — not just the top 3 — so each block's
- * horizontal scroll row can reveal the full set of matches.
- */
 function blocksWithViable(forecast: DailyForecast): BlockRecommendation[] {
   const out: BlockRecommendation[] = [];
   for (const block of TIME_BLOCKS) {
-    const conditions = conditionsForBlock(forecast, block);
-    if (!conditions) continue;
-    const all = rankGlues(conditions);
+    const cond = conditionsForBlock(forecast, block);
+    if (!cond) continue;
+    const all = rankGlues(cond);
     const viable = all.filter((s) => s.score >= VIABLE_THRESHOLD);
-    // Always show at least the single best, even if nothing clears the bar
     const ranked = viable.length ? viable : all.slice(0, 1);
-    out.push({ block, conditions, ranked });
+    out.push({ block, conditions: cond, ranked });
   }
   return out;
 }
 
-interface HomeProps {
-  onGoManual: () => void;
+interface StepperProps {
+  value: number;
+  min: number;
+  max: number;
+  step?: number;
+  unit: string;
+  onChange: (v: number) => void;
+  ariaLabel: string;
 }
 
-export function HomeScreen({ onGoManual }: HomeProps) {
+/** Stepper: typeable number field with − and + buttons and a unit suffix. */
+function Stepper({ value, min, max, step = 1, unit, onChange, ariaLabel }: StepperProps) {
+  const clamp = (n: number) => Math.max(min, Math.min(max, n));
+  const handleType = (raw: string) => {
+    if (raw === '' || raw === '-') return onChange(min);
+    const n = Number(raw);
+    if (Number.isFinite(n)) onChange(clamp(Math.round(n)));
+  };
+  return (
+    <div className="stepper" role="group" aria-label={ariaLabel}>
+      <button
+        type="button"
+        className="stepper-btn"
+        onClick={() => onChange(clamp(value - step))}
+        aria-label={`Decrease ${ariaLabel}`}
+      >
+        −
+      </button>
+      <input
+        type="text"
+        inputMode="decimal"
+        className="stepper-input"
+        value={value}
+        onChange={(e) => handleType(e.target.value)}
+        aria-label={ariaLabel}
+      />
+      <span className="stepper-unit">{unit}</span>
+      <button
+        type="button"
+        className="stepper-btn"
+        onClick={() => onChange(clamp(value + step))}
+        aria-label={`Increase ${ariaLabel}`}
+      >
+        +
+      </button>
+    </div>
+  );
+}
+
+export function HomeScreen() {
   const {
+    conditions,
     forecast,
     loading,
     error,
-    attempted,
-    canRefineWithGPS,
-    refreshFromIP,
-    refineWithGPS,
+    locationLabel,
+    setTemperature,
+    setHumidity,
+    detectLocation,
   } = useWeather();
 
+  const topNow = useMemo(() => topRecommendations(conditions, 3), [conditions]);
   const blocks = useMemo(
     () => (forecast ? blocksWithViable(forecast) : []),
     [forecast]
   );
-  const current = forecast ? currentConditions(forecast) : null;
-  const topNow = current ? topRecommendations(current, 3) : [];
   const activeBlockId = getBlockForHour(new Date().getHours()).id;
 
-  const subtitle = forecast
-    ? `${forecast.location.label ?? 'Your location'} · ${
-        forecast.source === 'manual' ? 'Manual conditions' : "Today's hourly forecast"
-      }`
-    : 'Pick the right hot glue for the conditions on your job.';
+  const subtitle = locationLabel
+    ? `${locationLabel} · auto-detected (approximate)`
+    : 'Set conditions below, or auto-detect from your location.';
 
   return (
-    <Screen
-      title="GluePull"
-      subtitle={subtitle}
-      onRefresh={forecast ? refreshFromIP : undefined}
-      refreshing={loading}
-    >
-      {loading && !forecast ? (
-        <div className="center-stack">
-          <div className="spinner" />
-          <span>Pulling local weather…</span>
-        </div>
-      ) : null}
-
-      {!forecast && !loading && attempted && error ? (
-        <div className="welcome">
-          <div className="welcome-icon" aria-hidden>
-            🌧
-          </div>
-          <h2 className="welcome-title">Couldn't load your weather</h2>
-          <p className="welcome-copy">{error}</p>
-          <div className="welcome-actions">
-            <button type="button" className="cta primary" onClick={refreshFromIP}>
-              <span aria-hidden>↻</span>
-              <span>Try again</span>
-            </button>
-            <button type="button" className="cta secondary" onClick={onGoManual}>
-              <span aria-hidden>✏️</span>
-              <span>Enter conditions manually</span>
-            </button>
-          </div>
-        </div>
-      ) : null}
-
-      {current ? (
-        <Section title="Current Conditions">
-          <ConditionStats conditions={current} />
+    <Screen title="GluePull" subtitle={subtitle}>
+      <Section
+        title="Your conditions"
+        subtitle="Drag, type, or auto-detect — recommendations update live."
+      >
+        <div className="conditions-card">
+          <button
+            type="button"
+            className="detect-btn"
+            onClick={detectLocation}
+            disabled={loading}
+          >
+            <span aria-hidden>📍</span>
+            <span>{loading ? 'Detecting…' : 'Auto-detect from my location'}</span>
+          </button>
           {error ? <p className="inline-warn">{error}</p> : null}
-          <div className="location-actions">
-            {canRefineWithGPS ? (
-              <button
-                type="button"
-                className="ghost-btn"
-                onClick={refineWithGPS}
-                disabled={loading}
-              >
-                <span aria-hidden>📍</span>
-                <span>Use precise location</span>
-              </button>
-            ) : null}
-            <button type="button" className="ghost-btn" onClick={onGoManual}>
-              <span aria-hidden>✏️</span>
-              <span>Override manually</span>
-            </button>
+
+          <div className="cond-field">
+            <div className="cond-row">
+              <span className="cond-label-text">
+                <span aria-hidden>🌡️</span>
+                <span>Temperature</span>
+              </span>
+              <span className="cond-value">
+                {Math.round(conditions.temperatureF)}°F
+              </span>
+            </div>
+            <input
+              type="range"
+              className="gp-slider"
+              min={-10}
+              max={140}
+              step={1}
+              value={Math.round(conditions.temperatureF)}
+              onChange={(e) => setTemperature(Number(e.target.value))}
+              aria-label="Temperature slider"
+            />
+            <div className="cond-stepper-row">
+              <Stepper
+                value={Math.round(conditions.temperatureF)}
+                min={-10}
+                max={140}
+                step={1}
+                unit="°F"
+                onChange={setTemperature}
+                ariaLabel="Temperature in Fahrenheit"
+              />
+            </div>
           </div>
-        </Section>
-      ) : null}
+
+          <div className="cond-field">
+            <div className="cond-row">
+              <span className="cond-label-text">
+                <span aria-hidden>💧</span>
+                <span>Humidity</span>
+              </span>
+              <span className="cond-value">
+                {Math.round(conditions.humidity)}%
+              </span>
+            </div>
+            <input
+              type="range"
+              className="gp-slider"
+              min={0}
+              max={100}
+              step={1}
+              value={Math.round(conditions.humidity)}
+              onChange={(e) => setHumidity(Number(e.target.value))}
+              aria-label="Humidity slider"
+            />
+            <div className="cond-stepper-row">
+              <Stepper
+                value={Math.round(conditions.humidity)}
+                min={0}
+                max={100}
+                step={1}
+                unit="%"
+                onChange={setHumidity}
+                ariaLabel="Relative humidity in percent"
+              />
+            </div>
+          </div>
+        </div>
+      </Section>
 
       {topNow.length ? (
         <Section
@@ -155,7 +208,7 @@ export function HomeScreen({ onGoManual }: HomeProps) {
       {blocks.length ? (
         <Section
           title="Today by the hour"
-          subtitle="Every glue that works in each block — swipe each row to see more."
+          subtitle="From your auto-detected forecast — swipe each row to see more."
         >
           <div className="time-blocks">
             {blocks.map((rec) => (

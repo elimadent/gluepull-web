@@ -16,6 +16,24 @@ import { DailyForecast, LocationInfo, WeatherSnapshot } from '@/types';
 
 const OPEN_METEO_URL = 'https://api.open-meteo.com/v1/forecast';
 const IP_LOCATION_URL = 'https://ipapi.co/json/';
+const GEOCODING_URL = 'https://geocoding-api.open-meteo.com/v1/search';
+
+export interface GeocodeResult {
+  /** Display name (city / village / town etc.) */
+  name: string;
+  /** Country (e.g. "United States"). */
+  country: string;
+  /** Country code (e.g. "US"). */
+  countryCode: string;
+  /** First-order administrative area (state / province / region). */
+  region?: string;
+  /** Postal code if the match is keyed off a zip. */
+  postcode?: string;
+  latitude: number;
+  longitude: number;
+  /** Best-effort one-line label for UI. */
+  label: string;
+}
 
 interface OpenMeteoResponse {
   hourly?: {
@@ -54,30 +72,127 @@ export function geolocationAvailable(): boolean {
 }
 
 /**
- * Look up the visitor's location from their IP. No permission prompt, works
- * on HTTP pages (the fetch is auto-upgraded to HTTPS by modern browsers).
- * Returns city + region as a friendly label.
+ * Free-text location search via Open-Meteo's geocoding API. Accepts city
+ * names, US states, postal/zip codes, and international locations in one
+ * query. Returns up to `limit` matches for the user to disambiguate.
+ *
+ * Examples:
+ *   "78641"          → Leander, TX, US
+ *   "Dallas"         → Dallas, Texas, US (+ other Dallases)
+ *   "Texas"          → Austin / Dallas / Houston etc.
+ *   "Tokyo"          → Tokyo, Japan
+ *   "Cali"           → Cali, Colombia
  */
-export async function getLocationFromIP(): Promise<LocationInfo> {
-  const res = await fetch(IP_LOCATION_URL, {
-    headers: { Accept: 'application/json' },
+export async function geocodeSearch(
+  query: string,
+  limit = 8
+): Promise<GeocodeResult[]> {
+  const q = query.trim();
+  if (!q) return [];
+  const params = new URLSearchParams({
+    name: q,
+    count: String(limit),
+    language: 'en',
+    format: 'json',
   });
-  if (!res.ok) {
-    throw new Error('Could not look up your location. Try Manual Entry.');
-  }
+  const res = await fetch(`${GEOCODING_URL}?${params.toString()}`);
+  if (!res.ok) throw new Error(`Location search failed (${res.status}).`);
+  const data: {
+    results?: Array<{
+      name: string;
+      country?: string;
+      country_code?: string;
+      admin1?: string;
+      admin2?: string;
+      postcodes?: string[];
+      latitude: number;
+      longitude: number;
+    }>;
+  } = await res.json();
+  if (!data.results?.length) return [];
+  return data.results.map((r) => {
+    const region = r.admin1;
+    const country = r.country ?? '';
+    const code = r.country_code ?? '';
+    const postcode = r.postcodes?.[0];
+    const labelParts = [r.name, region, code === 'US' ? code : country].filter(Boolean);
+    return {
+      name: r.name,
+      country,
+      countryCode: code,
+      region,
+      postcode,
+      latitude: r.latitude,
+      longitude: r.longitude,
+      label: labelParts.join(', '),
+    };
+  });
+}
+
+interface IpwhoResponse {
+  success?: boolean;
+  message?: string;
+  latitude?: number;
+  longitude?: number;
+  city?: string;
+  region?: string;
+  region_code?: string;
+  country?: string;
+  country_code?: string;
+}
+
+async function tryIpapi(): Promise<LocationInfo> {
+  const res = await fetch(IP_LOCATION_URL, { headers: { Accept: 'application/json' } });
+  if (!res.ok) throw new Error(`ipapi.co ${res.status}`);
   const data: IpapiResponse = await res.json();
-  if (
-    data.error ||
-    typeof data.latitude !== 'number' ||
-    typeof data.longitude !== 'number'
-  ) {
-    throw new Error(data.reason || 'Could not look up your location. Try Manual Entry.');
+  if (data.error || typeof data.latitude !== 'number' || typeof data.longitude !== 'number') {
+    throw new Error(data.reason || 'ipapi.co empty response');
   }
   return {
     latitude: data.latitude,
     longitude: data.longitude,
     label: [data.city, data.region_code || data.region].filter(Boolean).join(', '),
   };
+}
+
+async function tryIpwho(): Promise<LocationInfo> {
+  const res = await fetch('https://ipwho.is/', { headers: { Accept: 'application/json' } });
+  if (!res.ok) throw new Error(`ipwho.is ${res.status}`);
+  const data: IpwhoResponse = await res.json();
+  if (data.success === false || typeof data.latitude !== 'number' || typeof data.longitude !== 'number') {
+    throw new Error(data.message || 'ipwho.is empty response');
+  }
+  return {
+    latitude: data.latitude,
+    longitude: data.longitude,
+    label: [data.city, data.region_code || data.region].filter(Boolean).join(', '),
+  };
+}
+
+/**
+ * Look up the visitor's location from their IP. No permission prompt, works
+ * on HTTP pages (the fetch is auto-upgraded to HTTPS by modern browsers).
+ *
+ * Tries ipapi.co first, falls back to ipwho.is on failure (different
+ * provider, different IP ranges — covers the case where one network blocks
+ * the primary). Throws a user-friendly message only when BOTH fail so
+ * temporary blips on a single provider don't break the experience.
+ */
+export async function getLocationFromIP(): Promise<LocationInfo> {
+  const errors: string[] = [];
+  try {
+    return await tryIpapi();
+  } catch (e) {
+    errors.push(e instanceof Error ? e.message : String(e));
+  }
+  try {
+    return await tryIpwho();
+  } catch (e) {
+    errors.push(e instanceof Error ? e.message : String(e));
+  }
+  throw new Error(
+    `Auto-detect couldn't reach a location service (${errors.join(' / ')}). Set conditions manually or try again.`
+  );
 }
 
 /**

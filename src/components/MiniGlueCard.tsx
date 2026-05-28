@@ -1,3 +1,4 @@
+import { GlueStickPlaceholder } from '@/components/GlueStickPlaceholder';
 import { getAnsonProduct } from '@/data/products';
 import { linkTarget } from '@/utils/link';
 import { GlueScore } from '@/types';
@@ -24,9 +25,7 @@ export function MiniGlueCard({ score }: { score: GlueScore }) {
           loading="lazy"
         />
       ) : (
-        <div className="mini-card-img placeholder" aria-hidden>
-          🔥
-        </div>
+        <GlueStickPlaceholder color={glue.color} className="mini-card-img" />
       )}
       <div className="mini-card-body">
         <h4 className="mini-card-name">{displayName}</h4>

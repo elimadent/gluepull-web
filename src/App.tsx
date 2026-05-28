@@ -1,27 +1,32 @@
 import { useState } from 'react';
+import {
+  AboutTabIcon,
+  HomeTabIcon,
+  LibraryTabIcon,
+  PlanTabIcon,
+  TipsTabIcon,
+} from '@/components/TabIcons';
 import { WeatherProvider } from '@/context/WeatherContext';
 import { AboutScreen } from '@/screens/AboutScreen';
 import { GlueLibraryScreen } from '@/screens/GlueLibraryScreen';
 import { HomeScreen } from '@/screens/HomeScreen';
-import { ManualEntryScreen } from '@/screens/ManualEntryScreen';
 import { PlanScreen } from '@/screens/PlanScreen';
 import { TipsScreen } from '@/screens/TipsScreen';
 
-type TabId = 'home' | 'library' | 'plan' | 'manual' | 'tips' | 'about';
+type TabId = 'home' | 'library' | 'plan' | 'tips' | 'about';
 
 interface Tab {
   id: TabId;
   label: string;
-  icon: string;
+  Icon: React.ComponentType<React.SVGProps<SVGSVGElement>>;
 }
 
 const TABS: Tab[] = [
-  { id: 'home',    label: 'Home',    icon: '🏠' },
-  { id: 'library', label: 'Library', icon: '📚' },
-  { id: 'plan',    label: 'Plan',    icon: '📅' },
-  { id: 'manual',  label: 'Manual',  icon: '✏️' },
-  { id: 'tips',    label: 'Tips',    icon: '💡' },
-  { id: 'about',   label: 'About',   icon: 'ℹ️' },
+  { id: 'home',    label: 'Home',    Icon: HomeTabIcon },
+  { id: 'library', label: 'Library', Icon: LibraryTabIcon },
+  { id: 'plan',    label: 'Plan',    Icon: PlanTabIcon },
+  { id: 'tips',    label: 'Tips',    Icon: TipsTabIcon },
+  { id: 'about',   label: 'About',   Icon: AboutTabIcon },
 ];
 
 export interface AppProps {
@@ -30,27 +35,19 @@ export interface AppProps {
   embedded?: boolean;
 }
 
-function TabBar({
-  tab,
-  setTab,
-}: {
-  tab: TabId;
-  setTab: (t: TabId) => void;
-}) {
+function TabBar({ tab, setTab }: { tab: TabId; setTab: (t: TabId) => void }) {
   return (
     <nav className="tabbar" aria-label="GluePull sections">
-      {TABS.map((t) => (
+      {TABS.map(({ id, label, Icon }) => (
         <button
-          key={t.id}
+          key={id}
           type="button"
-          className={`tab${tab === t.id ? ' active' : ''}`}
-          onClick={() => setTab(t.id)}
-          aria-current={tab === t.id ? 'page' : undefined}
+          className={`tab${tab === id ? ' active' : ''}`}
+          onClick={() => setTab(id)}
+          aria-current={tab === id ? 'page' : undefined}
         >
-          <span className="tab-icon" aria-hidden>
-            {t.icon}
-          </span>
-          <span>{t.label}</span>
+          <Icon width={22} height={22} className="tab-icon" />
+          <span>{label}</span>
         </button>
       ))}
     </nav>
@@ -65,10 +62,9 @@ export function App({ embedded = false }: AppProps) {
       <div className={`app${embedded ? ' widget' : ''}`}>
         {embedded ? <TabBar tab={tab} setTab={setTab} /> : null}
 
-        {tab === 'home' && <HomeScreen onGoManual={() => setTab('manual')} />}
+        {tab === 'home' && <HomeScreen />}
         {tab === 'library' && <GlueLibraryScreen />}
         {tab === 'plan' && <PlanScreen />}
-        {tab === 'manual' && <ManualEntryScreen />}
         {tab === 'tips' && <TipsScreen />}
         {tab === 'about' && <AboutScreen />}
 

@@ -2,202 +2,126 @@ import {
   createContext,
   useCallback,
   useContext,
-  useEffect,
   useMemo,
-  useRef,
   useState,
   type ReactNode,
 } from 'react';
 import {
   fetchDailyForecast,
-  geolocationAvailable,
-  getCurrentLocation,
   getLocationFromIP,
 } from '@/services/weather';
-import { getStateByCode } from '@/data/usStates';
 import { DailyForecast, WeatherConditions } from '@/types';
 
+/*
+ * Simplified state model (per "remove the complicated picking…"):
+ *   - `conditions` is the single source of truth for what the scorer sees.
+ *     It starts at a sensible default (75°F / 50%RH / 1013 hPa) so the picker
+ *     shows useful recommendations on first paint.
+ *   - The user can `setTemperature` / `setHumidity` from inline inputs on
+ *     Home (sliders + number fields). Those write to `conditions` directly.
+ *   - `detectLocation` is the explicit auto-detect button. It runs IP
+ *     geolocation, fetches today's hourly forecast, and updates BOTH
+ *     `conditions` (set to the current-hour reading) AND `forecast` (kept
+ *     around so Home can render the time-block timeline).
+ *   - Nothing auto-fires on mount any more.
+ */
+
+const DEFAULT_CONDITIONS: WeatherConditions = {
+  temperatureF: 75,
+  humidity: 50,
+  pressureHpa: 1013,
+};
+
+const TEMP_MIN = -20;
+const TEMP_MAX = 140;
+const HUM_MIN = 0;
+const HUM_MAX = 100;
+
+const clampTemp = (n: number) =>
+  Number.isFinite(n) ? Math.max(TEMP_MIN, Math.min(TEMP_MAX, n)) : 75;
+const clampHumidity = (n: number) =>
+  Number.isFinite(n) ? Math.max(HUM_MIN, Math.min(HUM_MAX, n)) : 50;
+
 interface WeatherContextValue {
+  conditions: WeatherConditions;
+  /** Populated only by detectLocation — drives the time-block timeline. */
   forecast: DailyForecast | null;
   loading: boolean;
   error: string | null;
-  /** True after the auto-IP lookup has fired (success or failure). */
-  attempted: boolean;
-  /** Whether precise GPS is available in this browser context. */
-  canRefineWithGPS: boolean;
-  /** Whether an explicit Trip Planner override is currently active. */
-  tripActive: boolean;
-  /** Look up location by IP and fetch its forecast (default path). */
-  refreshFromIP: () => Promise<void>;
-  /** Upgrade to precise GPS coords + refetch. Only when canRefineWithGPS. */
-  refineWithGPS: () => Promise<void>;
-  /** Override forecast with hand-entered conditions. */
-  setManualConditions: (c: WeatherConditions) => void;
-  /** Override the location: pick a US state + a day offset from today. */
-  applyTrip: (stateCode: string, daysFromNow: number) => Promise<void>;
-  /** Override the location to specific lat/lon (used by hail-hotspot chips). */
-  applyTripToLocation: (
-    label: string,
-    lat: number,
-    lon: number,
-    daysFromNow: number
-  ) => Promise<void>;
-  /** Drop a trip override and go back to local IP weather. */
-  clearTrip: () => Promise<void>;
+  locationLabel: string | null;
+
+  setTemperature: (f: number) => void;
+  setHumidity: (pct: number) => void;
+  detectLocation: () => Promise<void>;
 }
 
 const WeatherContext = createContext<WeatherContextValue | undefined>(undefined);
 
-const dayISO = (offsetDays: number): string => {
-  const d = new Date();
-  d.setDate(d.getDate() + offsetDays);
-  return d.toISOString().slice(0, 10);
-};
-
-function manualForecast(c: WeatherConditions): DailyForecast {
+function currentHourFromForecast(forecast: DailyForecast): WeatherConditions {
+  const hour = new Date().getHours();
+  const exact = forecast.hourly.find((h) => h.hour === hour);
+  const snap = exact ?? forecast.hourly[0];
   return {
-    location: { latitude: 0, longitude: 0, label: 'Manual entry' },
-    date: dayISO(0),
-    source: 'manual',
-    hourly: Array.from({ length: 24 }, (_, hour) => ({
-      hour,
-      temperatureF: c.temperatureF,
-      humidity: c.humidity,
-      pressureHpa: c.pressureHpa,
-    })),
+    temperatureF: snap.temperatureF,
+    humidity: snap.humidity,
+    pressureHpa: snap.pressureHpa,
   };
 }
 
 export function WeatherProvider({ children }: { children: ReactNode }) {
+  const [conditions, setConditions] = useState<WeatherConditions>(DEFAULT_CONDITIONS);
   const [forecast, setForecast] = useState<DailyForecast | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [attempted, setAttempted] = useState(false);
-  const [tripActive, setTripActive] = useState(false);
-  const autoRanRef = useRef(false);
+  const [locationLabel, setLocationLabel] = useState<string | null>(null);
 
-  const refreshFromIP = useCallback(async () => {
+  // All temp / humidity writes get clamped at the context boundary — defense
+  // in depth so neither a buggy input, a hot-reload state ghost, nor a
+  // future code path can ever land conditions outside the picker's valid
+  // range.
+  const setTemperature = useCallback((f: number) => {
+    setConditions((c) => ({ ...c, temperatureF: clampTemp(f) }));
+  }, []);
+
+  const setHumidity = useCallback((pct: number) => {
+    setConditions((c) => ({ ...c, humidity: clampHumidity(pct) }));
+  }, []);
+
+  const detectLocation = useCallback(async () => {
     setLoading(true);
     setError(null);
-    setAttempted(true);
-    setTripActive(false);
     try {
       const location = await getLocationFromIP();
       const data = await fetchDailyForecast(location);
       setForecast(data);
+      setLocationLabel(location.label ?? null);
+      const live = currentHourFromForecast(data);
+      // Re-use the clamping setters via setConditions, but the values from
+      // a live forecast are safe — just guard against weird API outputs.
+      setConditions({
+        temperatureF: clampTemp(live.temperatureF),
+        humidity: clampHumidity(live.humidity),
+        pressureHpa: live.pressureHpa,
+      });
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Failed to load weather.');
+      setError(e instanceof Error ? e.message : 'Could not detect location.');
     } finally {
       setLoading(false);
     }
   }, []);
 
-  const refineWithGPS = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    setTripActive(false);
-    try {
-      const location = await getCurrentLocation();
-      const data = await fetchDailyForecast(location);
-      setForecast(data);
-    } catch (e) {
-      setError(e instanceof Error ? e.message : 'Could not refine location.');
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  const setManualConditions = useCallback((c: WeatherConditions) => {
-    setError(null);
-    setForecast(manualForecast(c));
-  }, []);
-
-  const applyTrip = useCallback(async (stateCode: string, daysFromNow: number) => {
-    const state = getStateByCode(stateCode);
-    if (!state) {
-      setError(`No data for state ${stateCode}.`);
-      return;
-    }
-    setLoading(true);
-    setError(null);
-    try {
-      const data = await fetchDailyForecast(
-        {
-          latitude: state.lat,
-          longitude: state.lon,
-          label: `${state.city}, ${state.code}`,
-        },
-        dayISO(daysFromNow)
-      );
-      setForecast(data);
-      setTripActive(true);
-    } catch (e) {
-      setError(e instanceof Error ? e.message : 'Could not fetch trip forecast.');
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  const applyTripToLocation = useCallback(
-    async (label: string, lat: number, lon: number, daysFromNow: number) => {
-      setLoading(true);
-      setError(null);
-      try {
-        const data = await fetchDailyForecast(
-          { latitude: lat, longitude: lon, label },
-          dayISO(daysFromNow)
-        );
-        setForecast(data);
-        setTripActive(true);
-      } catch (e) {
-        setError(e instanceof Error ? e.message : 'Could not fetch trip forecast.');
-      } finally {
-        setLoading(false);
-      }
-    },
-    []
-  );
-
-  const clearTrip = useCallback(async () => {
-    setTripActive(false);
-    await refreshFromIP();
-  }, [refreshFromIP]);
-
-  // Auto-fetch IP location on mount once.
-  useEffect(() => {
-    if (autoRanRef.current) return;
-    autoRanRef.current = true;
-    void refreshFromIP();
-  }, [refreshFromIP]);
-
-  const value = useMemo(
+  const value = useMemo<WeatherContextValue>(
     () => ({
+      conditions,
       forecast,
       loading,
       error,
-      attempted,
-      canRefineWithGPS: geolocationAvailable(),
-      tripActive,
-      refreshFromIP,
-      refineWithGPS,
-      setManualConditions,
-      applyTrip,
-      applyTripToLocation,
-      clearTrip,
+      locationLabel,
+      setTemperature,
+      setHumidity,
+      detectLocation,
     }),
-    [
-      forecast,
-      loading,
-      error,
-      attempted,
-      tripActive,
-      refreshFromIP,
-      refineWithGPS,
-      setManualConditions,
-      applyTrip,
-      applyTripToLocation,
-      clearTrip,
-    ]
+    [conditions, forecast, loading, error, locationLabel, setTemperature, setHumidity, detectLocation]
   );
 
   return <WeatherContext.Provider value={value}>{children}</WeatherContext.Provider>;

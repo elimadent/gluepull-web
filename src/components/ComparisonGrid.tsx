@@ -1,3 +1,4 @@
+import { GlueStickPlaceholder } from '@/components/GlueStickPlaceholder';
 import { getAnsonProduct } from '@/data/products';
 import { linkTarget } from '@/utils/link';
 import { GlueScore } from '@/types';
@@ -52,9 +53,7 @@ export function ComparisonGrid({ picks }: ComparisonGridProps) {
                 loading="lazy"
               />
             ) : (
-              <div className="compare-img placeholder" aria-hidden>
-                🔥
-              </div>
+              <GlueStickPlaceholder color={p.glue.color} className="compare-img" />
             )}
             <h3 className="compare-name">{displayName}</h3>
             <div className="compare-meta">

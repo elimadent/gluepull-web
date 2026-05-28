@@ -3,11 +3,14 @@ import { BuyButton } from '@/components/BuyButton';
 import { Screen } from '@/components/Screen';
 import { Section } from '@/components/Section';
 import { SynergyStack } from '@/components/SynergyStack';
-import { useWeather } from '@/context/WeatherContext';
+import { TripPlanner } from '@/components/TripPlanner';
 import { getAnsonProduct } from '@/data/products';
 import { aggregateGluePicks } from '@/logic/recommendation';
-import { fetchMultiDayForecast, getLocationFromIP } from '@/services/weather';
-import { DailyForecast, Glue } from '@/types';
+import {
+  fetchMultiDayForecast,
+  getLocationFromIP,
+} from '@/services/weather';
+import { DailyForecast, Glue, LocationInfo } from '@/types';
 
 type Horizon = 'week' | 'month';
 const DAYS: Record<Horizon, number> = { week: 7, month: 16 };
@@ -35,37 +38,60 @@ function PlanRow({ glue, days }: { glue: Glue; days: number }) {
 }
 
 export function PlanScreen() {
-  const { forecast } = useWeather();
   const [horizon, setHorizon] = useState<Horizon>('week');
   const [days, setDays] = useState<DailyForecast[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  /** When set, the plan was built for a user-picked trip location instead of
+   *  auto-IP. Persists across horizon toggles. */
+  const [tripLocation, setTripLocation] = useState<LocationInfo | null>(null);
 
-  const load = useCallback(async (h: Horizon) => {
-    setLoading(true);
-    setError(null);
-    try {
-      const location = await getLocationFromIP();
-      const data = await fetchMultiDayForecast(location, DAYS[h]);
-      setDays(data);
-    } catch (e) {
-      setError(e instanceof Error ? e.message : 'Failed to load forecast.');
-      setDays([]);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+  const load = useCallback(
+    async (h: Horizon, locationOverride?: LocationInfo) => {
+      setLoading(true);
+      setError(null);
+      try {
+        const location = locationOverride ?? (await getLocationFromIP());
+        const data = await fetchMultiDayForecast(location, DAYS[h]);
+        setDays(data);
+      } catch (e) {
+        setError(e instanceof Error ? e.message : 'Failed to load forecast.');
+        setDays([]);
+      } finally {
+        setLoading(false);
+      }
+    },
+    []
+  );
+
+  const onTripPick = useCallback(
+    async (location: LocationInfo) => {
+      setTripLocation(location);
+      await load(horizon, location);
+    },
+    [horizon, load]
+  );
+
+  const clearTrip = useCallback(async () => {
+    setTripLocation(null);
+    await load(horizon);
+  }, [horizon, load]);
 
   const picks = useMemo(() => aggregateGluePicks(days), [days]);
 
   const horizonLabel =
     horizon === 'week' ? 'next 7 days' : `next ${days.length || 16} days`;
+  const locationLabel = tripLocation?.label ?? null;
 
   return (
     <Screen
       title="Job Planner"
-      subtitle="Pre-buy every glue and tool for the whole job."
-      onRefresh={() => load(horizon)}
+      subtitle={
+        locationLabel
+          ? `Trip plan for ${locationLabel}.`
+          : 'Pre-buy every glue and tool for the whole job.'
+      }
+      onRefresh={() => load(horizon, tripLocation ?? undefined)}
       refreshing={loading}
     >
       <div className="toggle-row">
@@ -76,13 +102,32 @@ export function PlanScreen() {
             className={`toggle${horizon === h ? ' active' : ''}`}
             onClick={() => {
               setHorizon(h);
-              void load(h);
+              void load(h, tripLocation ?? undefined);
             }}
           >
             {h === 'week' ? 'This Week' : 'This Month'}
           </button>
         ))}
       </div>
+
+      <TripPlanner
+        onPick={onTripPick}
+        activeLabel={locationLabel}
+        disabled={loading}
+      />
+      {tripLocation ? (
+        <div className="trip-clear-row">
+          <button
+            type="button"
+            className="ghost-btn"
+            onClick={clearTrip}
+            disabled={loading}
+          >
+            <span aria-hidden>↺</span>
+            <span>Back to my local plan</span>
+          </button>
+        </div>
+      ) : null}
 
       {!days.length && !loading && !error ? (
         <div className="welcome" style={{ marginTop: 16 }}>
@@ -98,7 +143,7 @@ export function PlanScreen() {
             <button
               type="button"
               className="cta primary"
-              onClick={() => load(horizon)}
+              onClick={() => load(horizon, tripLocation ?? undefined)}
             >
               <span aria-hidden>📍</span>
               <span>Build {horizon === 'week' ? '7-day' : 'monthly'} plan</span>
@@ -120,14 +165,12 @@ export function PlanScreen() {
             🌧
           </div>
           <div>{error}</div>
-          {forecast?.source === 'manual' ? (
-            <div style={{ color: 'var(--gp-text-muted)', fontSize: 'var(--gp-fs-sm)' }}>
-              Planning needs a live forecast — manual entry covers a single moment
-              only.
-            </div>
-          ) : null}
           <div className="actions">
-            <button type="button" className="primary" onClick={() => load(horizon)}>
+            <button
+              type="button"
+              className="primary"
+              onClick={() => load(horizon, tripLocation ?? undefined)}
+            >
               Retry
             </button>
           </div>
