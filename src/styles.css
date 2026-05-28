@@ -1347,6 +1347,21 @@ html { scroll-behavior: smooth; }
   flex-shrink: 0;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
 }
+/* SVG fallback when no real product photo is featured for a section. */
+.tip-hero-svg {
+  width: 96px;
+  height: 96px;
+  border-radius: var(--gp-r-sm);
+  border: 1px solid var(--gp-gold-deep);
+  background: var(--gp-bg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--gp-gold-bright);
+  flex-shrink: 0;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+}
+.tip-hero-svg svg { display: block; }
 .tip-head-text {
   flex: 1;
   min-width: 0;

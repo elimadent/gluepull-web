@@ -2,6 +2,7 @@ import { glues as allGlues } from '@/data/glues';
 import { TIME_BLOCKS } from '@/data/timeBlocks';
 import {
   BlockRecommendation,
+  ConditionGrade,
   DailyForecast,
   Glue,
   GlueScore,
@@ -40,8 +41,68 @@ function pressureFactor(pressureHpa: number): number {
   return clamp01(1 - (1013 - pressureHpa) / 165);
 }
 
+/**
+ * Classify the current temperature into a coarse band so we know which of the
+ * research dataset's A-D grades to consult.
+ *   <55°F → cold morning grade
+ *   ≥85°F → hot afternoon grade
+ *   55-85°F → neither (use a mild blend of both grades if both exist)
+ */
+type TempBand = 'cold' | 'mild' | 'hot';
+function tempBandOf(tempF: number): TempBand {
+  if (tempF < 55) return 'cold';
+  if (tempF >= 85) return 'hot';
+  return 'mild';
+}
+
+type HumidityBand = 'dry' | 'moderate' | 'humid';
+function humidityBandOf(humidity: number): HumidityBand {
+  if (humidity <= 30) return 'dry';
+  if (humidity >= 65) return 'humid';
+  return 'moderate';
+}
+
+/** Convert a research A-D grade to a small additive bonus on the 0-100 score. */
+function gradePoints(grade: ConditionGrade | undefined): number {
+  switch (grade) {
+    case 'A': return 6;
+    case 'B': return 2;
+    case 'C': return -2;
+    case 'D': return -8;
+    default:  return 0; // unverified / null
+  }
+}
+
+/**
+ * Combine the per-band A-D grades from the research dataset into a single
+ * additive nudge on the final 0-100 score. Caps at ±10 so it never
+ * dominates the maker-stated range / chart-derived window — it just breaks
+ * ties between glues whose raw ranges score similarly.
+ */
+function gradeBonus(glue: Glue, c: WeatherConditions): number {
+  let bonus = 0;
+  const tBand = tempBandOf(c.temperatureF);
+  if (tBand === 'cold') bonus += gradePoints(glue.coldMorningGrade);
+  else if (tBand === 'hot') bonus += gradePoints(glue.hotAfternoonGrade);
+  else {
+    // Mild: blend the two if both are stated, otherwise use whichever exists
+    const cold = glue.coldMorningGrade ? gradePoints(glue.coldMorningGrade) : 0;
+    const hot = glue.hotAfternoonGrade ? gradePoints(glue.hotAfternoonGrade) : 0;
+    const present = (glue.coldMorningGrade ? 1 : 0) + (glue.hotAfternoonGrade ? 1 : 0);
+    bonus += present ? (cold + hot) / 2 : 0;
+  }
+  const hBand = humidityBandOf(c.humidity);
+  if (hBand === 'dry') bonus += gradePoints(glue.dryDesertGrade);
+  else if (hBand === 'humid') bonus += gradePoints(glue.humidCoastalGrade);
+  return Math.max(-10, Math.min(10, bonus));
+}
+
 export function scoreGlue(glue: Glue, c: WeatherConditions): GlueScore {
-  const tempFit = rangeFit(c.temperatureF, glue.optimalTemp, TEMP_TOLERANCE_F);
+  // Prefer the maker/distributor-published range (research dataset, where one
+  // exists) over the chart-inferred optimalTemp window. Published numbers
+  // are higher-confidence — there are only ~5 of them across the lineup.
+  const tempWindow = glue.publishedTempRange ?? glue.optimalTemp;
+  const tempFit = rangeFit(c.temperatureF, tempWindow, TEMP_TOLERANCE_F);
   const humidityFit = rangeFit(c.humidity, glue.optimalHumidity, HUMIDITY_TOLERANCE);
   const pressFit = pressureFactor(c.pressureHpa);
 
@@ -49,23 +110,25 @@ export function scoreGlue(glue: Glue, c: WeatherConditions): GlueScore {
     tempFit * WEIGHT_TEMP +
     humidityFit * WEIGHT_HUMIDITY +
     pressFit * WEIGHT_PRESSURE;
-  const score = Math.round(raw * 100);
+  const baseScore = raw * 100;
+  const score = Math.max(0, Math.min(100, Math.round(baseScore + gradeBonus(glue, c))));
 
   const reasons: string[] = [];
   const warnings: string[] = [];
   const temp = Math.round(c.temperatureF);
 
   if (tempFit === 1) {
-    reasons.push(
-      `Dialed in for ${temp}°F (optimal ${glue.optimalTemp.min}–${glue.optimalTemp.max}°F).`
-    );
-  } else if (c.temperatureF < glue.optimalTemp.min) {
+    const rangeDesc = glue.publishedTempRange
+      ? `maker-published ${tempWindow.min}–${tempWindow.max}°F`
+      : `optimal ${tempWindow.min}–${tempWindow.max}°F`;
+    reasons.push(`Dialed in for ${temp}°F (${rangeDesc}).`);
+  } else if (c.temperatureF < tempWindow.min) {
     warnings.push(
-      `Cooler than ideal — runs best ${glue.optimalTemp.min}–${glue.optimalTemp.max}°F. Preheat the panel.`
+      `Cooler than ideal — runs best ${tempWindow.min}–${tempWindow.max}°F. Preheat the panel.`
     );
   } else {
     warnings.push(
-      `Hotter than ideal — runs best ${glue.optimalTemp.min}–${glue.optimalTemp.max}°F. May release early.`
+      `Hotter than ideal — runs best ${tempWindow.min}–${tempWindow.max}°F. May release early.`
     );
   }
 

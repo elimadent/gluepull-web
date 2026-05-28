@@ -171,13 +171,11 @@ export const ansonProducts: Record<string, GlueProduct> = {
     description: 'White Anson PDR Glue - We are now carrying ansonpdr.com brand high-strength PDR glue. These glue sticks are white and give a high-strength, strong glue pull. We had several professional PDR companies test the ansonpdr.com white glue sticks. Each of the technicians have stated that this glue gives one of the strongest pulls when compared to other glues on the market. This is an all-weather glue; however, we have seen this glue perform at its best during moderate to cool temps.',
     productUrl: 'https://ansonpdr.com/products/white-pdr-glue-sticks-anson',
   },
-  'tequila-collision-nude': {
-    matched: true,
-    name: 'Tequila Collision Hot Melt Glue',
-    imageUrl: 'https://cdn.shopify.com/s/files/1/0499/2545/6040/files/anson-pdr-tequila-collision-glue-sticks-f3a7b1c9.jpg',
-    description: 'Unleash your creativity with Tequila Collision Hot Melt Glue sticks. These glue sticks provide a strong, reliable bond on a variety of damage. This glue has a longer setup time allowing for more of a elastic pull. (Stays softer then most glues) Proudly made in the USA, Tequila Collision glue sticks ensure quality and performance for all your bonding needs. Get ready to stick it to your next dent!',
-    productUrl: 'https://ansonpdr.com/products/tequila-pdr-collision-glue',
-  },
+  // tequila-collision-nude DROPPED — research flagged it as the same private-
+  // label SKU as anson-collision-hard-pull-nude (same Anson product handle,
+  // third-party retailers call it "Anson Tequila Collision glue"). Keeping
+  // both would double-recommend the same physical product.
+
   'tequila-ice-blue': {
     matched: true,
     name: 'Tequila Ice Glue',
