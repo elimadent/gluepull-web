@@ -1,4 +1,5 @@
 import { useMemo } from 'react';
+import { AboutGluePull } from '@/components/AboutGluePull';
 import { ComparisonGrid } from '@/components/ComparisonGrid';
 import { ConditionStats } from '@/components/ConditionStats';
 import { GlueCard } from '@/components/GlueCard';
@@ -81,6 +82,8 @@ export function HomeScreen({ onGoManual }: HomeProps) {
       onRefresh={forecast ? refreshFromIP : undefined}
       refreshing={loading}
     >
+      <AboutGluePull />
+
       {loading && !forecast ? (
         <div className="center-stack">
           <div className="spinner" />
