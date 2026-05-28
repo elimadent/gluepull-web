@@ -1,48 +1,64 @@
 import { Screen } from '@/components/Screen';
-import {
-  GlueSticksIcon,
-  HeatGunIcon,
-  MiniLifterIcon,
-  PanelPrepIcon,
-} from '@/components/TipIcons';
 import { tipSections } from '@/data/tips';
+import { linkTarget } from '@/utils/link';
 
-const SECTION_ICON: Record<
-  string,
-  (props: React.SVGProps<SVGSVGElement>) => JSX.Element
-> = {
-  prep: PanelPrepIcon,
-  heat: HeatGunIcon,
-  'glue-choice': GlueSticksIcon,
-  pulling: MiniLifterIcon,
-};
-
+/**
+ * Editorial layout — each tip card is structured like a small print-magazine
+ * spread: section eyebrow, large title, dek (subtitle), photo of the real
+ * tool the section is about, zero-padded numbered steps, and a "Tool shown"
+ * footer linking to the actual product on ansonpdr.com.
+ */
 export function TipsScreen() {
   return (
-    <Screen title="Tech Tips" subtitle="Get the most out of every pull.">
-      {tipSections.map((section) => {
-        const Icon = SECTION_ICON[section.id];
-        return (
-          <div key={section.id} className="tip-card">
-            <div className="tip-head">
-              <div className="tip-icon-wrap" aria-hidden>
-                {Icon ? (
-                  <Icon width={26} height={26} />
-                ) : (
-                  <span>💡</span>
-                )}
+    <Screen title="Tech Tips" subtitle="A working field guide for hot-glue PDR.">
+      {tipSections.map((section, idx) => (
+        <article key={section.id} className="tip-card editorial">
+          <header className="tip-editorial-head">
+            {section.featured ? (
+              <img
+                src={section.featured.image}
+                alt={section.featured.name}
+                className="tip-hero-img"
+                loading="lazy"
+              />
+            ) : null}
+            <div className="tip-head-text">
+              <div className="tip-eyebrow">
+                Lesson {String(idx + 1).padStart(2, '0')}
               </div>
-              <h3 className="tip-title">{section.title}</h3>
+              <h3 className="tip-title-editorial">{section.title}</h3>
+              {section.subtitle ? (
+                <p className="tip-dek">{section.subtitle}</p>
+              ) : null}
             </div>
+          </header>
+
+          <ol className="tip-steps-list">
             {section.steps.map((step, i) => (
-              <div key={i} className="tip-step">
-                <div className="num">{i + 1}</div>
-                <div className="text">{step}</div>
-              </div>
+              <li key={i} className="tip-step-editorial">
+                <span className="tip-step-num">
+                  {String(i + 1).padStart(2, '0')}
+                </span>
+                <span className="tip-step-text">{step}</span>
+              </li>
             ))}
-          </div>
-        );
-      })}
+          </ol>
+
+          {section.featured ? (
+            <footer className="tip-footer">
+              <span className="tip-footer-label">Tool shown</span>
+              <a
+                className="tip-footer-link"
+                href={section.featured.url}
+                target={linkTarget(section.featured.url)}
+                rel="noopener noreferrer"
+              >
+                {section.featured.name} →
+              </a>
+            </footer>
+          ) : null}
+        </article>
+      ))}
     </Screen>
   );
 }
