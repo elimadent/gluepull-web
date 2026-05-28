@@ -1,11 +1,10 @@
 import { useCallback, useMemo, useState } from 'react';
-import { AccessoryRow } from '@/components/AccessoryRow';
 import { BuyButton } from '@/components/BuyButton';
 import { Screen } from '@/components/Screen';
 import { Section } from '@/components/Section';
+import { SynergyStack } from '@/components/SynergyStack';
 import { useWeather } from '@/context/WeatherContext';
 import { getAnsonProduct } from '@/data/products';
-import { bundleForGlues } from '@/logic/bundles';
 import { aggregateGluePicks } from '@/logic/recommendation';
 import { fetchMultiDayForecast, getLocationFromIP } from '@/services/weather';
 import { DailyForecast, Glue } from '@/types';
@@ -58,10 +57,6 @@ export function PlanScreen() {
   }, []);
 
   const picks = useMemo(() => aggregateGluePicks(days), [days]);
-  const kit = useMemo(
-    () => bundleForGlues(picks.map((p) => p.glue)),
-    [picks]
-  );
 
   const horizonLabel =
     horizon === 'week' ? 'next 7 days' : `next ${days.length || 16} days`;
@@ -150,14 +145,12 @@ export function PlanScreen() {
         </Section>
       ) : null}
 
-      {kit.length ? (
+      {picks.length ? (
         <Section
-          title="Complete Tool Kit"
-          subtitle="Everything to cover the glues above — buy it all up front."
+          title="The Synergy Stack"
+          subtitle="The right gun, tabs, tools, prep and heat to pull the glues above. Tap a category to swipe through Anson products and see exactly why each one pairs with your stick selection."
         >
-          {kit.map((acc) => (
-            <AccessoryRow key={acc.id} accessory={acc} />
-          ))}
+          <SynergyStack />
           <a
             className="shop-all"
             href="https://ansonpdr.com/collections/all"

@@ -1895,3 +1895,204 @@ body.gp-standalone {
   line-height: 1.45;
   color: var(--gp-text);
 }
+
+/* Synergy Stack — per-category collapsibles + horizontal product carousel */
+.synergy-stack {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gp-md);
+  margin-top: var(--gp-sm);
+}
+.synergy-cat {
+  background: var(--gp-surface);
+  border: 1px solid var(--gp-border);
+  border-radius: var(--gp-r-lg);
+  overflow: hidden;
+}
+.synergy-cat[open] {
+  border-color: var(--gp-gold-deep);
+}
+.synergy-cat > summary {
+  list-style: none;
+  cursor: pointer;
+  padding: var(--gp-md) var(--gp-lg);
+  display: flex;
+  align-items: flex-start;
+  gap: var(--gp-md);
+  user-select: none;
+}
+.synergy-cat > summary::-webkit-details-marker { display: none; }
+.synergy-icon {
+  font-size: 26px;
+  line-height: 1;
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  background: var(--gp-bg);
+  border: 1px solid var(--gp-gold-deep);
+  border-radius: var(--gp-r-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.synergy-head-text {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.synergy-cat-label {
+  font-family: var(--gp-font-display);
+  font-size: var(--gp-fs-lg);
+  font-weight: 700;
+  color: var(--gp-cream);
+  line-height: 1.1;
+}
+.synergy-cat-role {
+  color: var(--gp-text-muted);
+  font-size: var(--gp-fs-xs);
+  line-height: 1.35;
+}
+.synergy-lead {
+  color: var(--gp-gold);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.4px;
+  margin-top: 2px;
+}
+.synergy-chev {
+  color: var(--gp-text-muted);
+  font-size: 18px;
+  transition: transform 150ms ease;
+  flex-shrink: 0;
+}
+.synergy-cat[open] > summary > .synergy-chev {
+  transform: rotate(180deg);
+}
+
+.synergy-carousel-wrap {
+  position: relative;
+  padding: 0 var(--gp-md) var(--gp-md);
+}
+.synergy-arrow {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: rgba(5, 5, 5, 0.92);
+  border: 1px solid var(--gp-gold-deep);
+  color: var(--gp-gold-bright);
+  font-size: 22px;
+  font-weight: 700;
+  line-height: 1;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+.synergy-arrow.left  { left: 4px; }
+.synergy-arrow.right { right: 4px; }
+.synergy-arrow:hover {
+  border-color: var(--gp-gold);
+  background: rgba(10, 10, 10, 0.98);
+}
+
+.synergy-carousel {
+  display: flex;
+  gap: var(--gp-md);
+  overflow-x: auto;
+  overflow-y: hidden;
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+  scroll-padding-left: 8px;
+  scrollbar-width: thin;
+  scrollbar-color: var(--gp-border) transparent;
+  padding-bottom: var(--gp-sm);
+}
+.synergy-carousel::-webkit-scrollbar { height: 4px; }
+.synergy-carousel::-webkit-scrollbar-thumb {
+  background: var(--gp-border);
+  border-radius: 4px;
+}
+.synergy-card {
+  flex: 0 0 280px;
+  scroll-snap-align: start;
+  background: var(--gp-surface-alt);
+  border: 1px solid var(--gp-border);
+  border-radius: var(--gp-r-md);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+}
+.synergy-card:first-child {
+  border-color: var(--gp-gold);
+  box-shadow: 0 0 0 1px rgba(212, 175, 55, 0.18);
+}
+.synergy-lead-tag {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  background: var(--gp-gold);
+  color: #050505;
+  font-size: 9px;
+  font-weight: 900;
+  letter-spacing: 1.4px;
+  padding: 4px 8px;
+  border-radius: 4px;
+  z-index: 1;
+}
+.synergy-card-img {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  object-fit: cover;
+  background: #f4efe4;
+  display: block;
+}
+.synergy-card-body {
+  padding: var(--gp-md);
+  display: flex;
+  flex-direction: column;
+  gap: var(--gp-sm);
+  flex: 1;
+}
+.synergy-card-name {
+  font-family: var(--gp-font-display);
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 1.2;
+  color: var(--gp-cream);
+}
+.synergy-card-why {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: var(--gp-sm) var(--gp-md);
+  background: var(--gp-bg);
+  border: 1px solid var(--gp-border);
+  border-left: 2px solid var(--gp-gold);
+  border-radius: var(--gp-r-sm);
+  font-size: 13px;
+  line-height: 1.45;
+  color: var(--gp-text);
+  flex: 1;
+}
+.synergy-card-why-label {
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 1.4px;
+  text-transform: uppercase;
+  color: var(--gp-gold);
+}
+.synergy-card .buy {
+  margin-top: 0;
+  font-size: var(--gp-fs-xs);
+  letter-spacing: 1px;
+  min-height: 44px;
+}
