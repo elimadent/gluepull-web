@@ -611,46 +611,55 @@
 .rank.r2 { border-color: var(--gp-silver); color: var(--gp-silver); }
 .rank.r3 { border-color: var(--gp-bronze); color: var(--gp-bronze); }
 
-/* Buy button (gold gradient) */
+/* Buy button — tuxedo treatment: black interior, gold border, gold text.
+ * High legibility, signals premium. Inverts to solid gold on hover/active. */
 .buy {
   margin-top: var(--gp-lg);
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: var(--gp-sm);
-  background: linear-gradient(180deg, var(--gp-gold-bright) 0%, var(--gp-gold) 50%, var(--gp-gold-dark) 100%);
-  color: #1a1308;
-  font-weight: 700;
+  background: #050505;
+  color: var(--gp-gold-bright);
+  border: 1.5px solid var(--gp-gold);
+  font-weight: 800;
   font-size: var(--gp-fs-md);
-  letter-spacing: 0.6px;
+  letter-spacing: 1.5px;
   text-transform: uppercase;
   min-height: var(--gp-touch);
   width: 100%;
   border-radius: var(--gp-r-md);
   text-decoration: none;
-  transition: filter 150ms ease, transform 80ms ease;
+  transition: background-color 150ms ease, color 150ms ease, transform 80ms ease;
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.3),
-    0 2px 6px rgba(0, 0, 0, 0.55);
+    inset 0 1px 0 rgba(212, 175, 55, 0.18),
+    0 2px 10px rgba(0, 0, 0, 0.5);
 }
-.buy:hover { filter: brightness(1.05); }
-.buy:active { filter: brightness(0.92); transform: scale(0.995); }
+.buy:hover {
+  background: var(--gp-gold);
+  color: #050505;
+}
+.buy:active {
+  background: var(--gp-gold-dark);
+  color: #050505;
+  transform: scale(0.99);
+}
 .buy.compact {
-  min-height: 40px;
+  min-height: 38px;
   width: auto;
   padding: 0 var(--gp-md);
   border-radius: var(--gp-r-sm);
   font-size: var(--gp-fs-xs);
+  letter-spacing: 1px;
   margin-top: 0;
 }
 .buy.disabled {
-  background: var(--gp-surface-alt);
+  background: transparent;
   color: var(--gp-text-faint);
   text-transform: none;
   letter-spacing: 0.2px;
   font-weight: 600;
   cursor: not-allowed;
-  filter: none;
   box-shadow: none;
   border: 1px dashed var(--gp-border);
 }
@@ -781,32 +790,35 @@
 }
 .compare-buy {
   width: 100%;
-  padding: 10px 8px;
+  padding: 8px 6px;
   font-family: var(--gp-font-body);
-  font-size: 13px;
-  font-weight: 900;
-  letter-spacing: 0.5px;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
   border-radius: var(--gp-r-sm);
-  background: linear-gradient(180deg, var(--gp-gold-bright) 0%, var(--gp-gold) 60%, var(--gp-gold-dark) 100%);
-  color: #1a1308;
+  background: #050505;
+  color: var(--gp-gold-bright);
+  border: 1.5px solid var(--gp-gold);
   text-decoration: none;
   text-align: center;
   margin-top: auto;
-  min-height: 40px;
+  min-height: 38px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 4px;
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.35),
-    0 1px 3px rgba(0, 0, 0, 0.4);
+  transition: background-color 150ms ease, color 150ms ease;
+}
+.compare-buy:hover {
+  background: var(--gp-gold);
+  color: #050505;
 }
 .compare-buy.disabled {
-  background: var(--gp-surface-alt);
+  background: transparent;
   color: var(--gp-text-faint);
-  cursor: not-allowed;
-  box-shadow: none;
   border: 1px dashed var(--gp-border);
+  cursor: not-allowed;
 }
 
 /* Accessory row */
@@ -1360,4 +1372,176 @@ html.gp-standalone,
 body.gp-standalone {
   margin: 0;
   background: #000;
+}
+
+/* Time-block sections — one per Morning/Midday/Afternoon/Evening, each with
+ * a horizontally-scrolling row of every viable glue for that block. */
+.time-blocks {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gp-xl);
+  margin-top: var(--gp-md);
+}
+.time-block {
+  position: relative;
+}
+.time-block-head {
+  display: flex;
+  align-items: baseline;
+  gap: var(--gp-sm);
+  padding-bottom: var(--gp-sm);
+  border-bottom: 1px solid var(--gp-border-soft);
+  margin-bottom: var(--gp-md);
+}
+.time-block-icon {
+  font-size: 22px;
+  line-height: 1;
+}
+.time-block-title {
+  font-family: var(--gp-font-display);
+  font-size: var(--gp-fs-xl);
+  font-weight: 700;
+  color: var(--gp-cream);
+  letter-spacing: 0.5px;
+}
+.time-block.active .time-block-title {
+  color: var(--gp-gold);
+}
+.time-block-conds {
+  color: var(--gp-text-muted);
+  font-size: var(--gp-fs-sm);
+  font-weight: 600;
+  letter-spacing: 0.3px;
+  margin-left: auto;
+}
+.time-block-now {
+  background: var(--gp-gold);
+  color: #050505;
+  font-size: 10px;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 1.2px;
+  padding: 3px 8px;
+  border-radius: var(--gp-r-pill);
+  margin-left: var(--gp-sm);
+}
+.time-block-scroll {
+  display: flex;
+  gap: var(--gp-md);
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding-bottom: var(--gp-sm);
+  scroll-snap-type: x proximity;
+  -webkit-overflow-scrolling: touch;
+  /* hide scrollbar on webkit; show subtle on firefox */
+  scrollbar-width: thin;
+  scrollbar-color: var(--gp-border) transparent;
+}
+.time-block-scroll::-webkit-scrollbar {
+  height: 4px;
+}
+.time-block-scroll::-webkit-scrollbar-thumb {
+  background: var(--gp-border);
+  border-radius: 4px;
+}
+.time-block-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+.time-block-scroll > [role='listitem'] {
+  scroll-snap-align: start;
+  flex: 0 0 auto;
+}
+
+/* Mini glue card — horizontal-scroll item */
+.mini-card {
+  width: 144px;
+  background: var(--gp-surface);
+  border: 1px solid var(--gp-border);
+  border-radius: var(--gp-r-md);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+.mini-card-img {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  object-fit: cover;
+  background: var(--gp-surface-3);
+  display: block;
+}
+.mini-card-img.placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 30px;
+  color: var(--gp-text-faint);
+}
+.mini-card-body {
+  padding: var(--gp-sm) var(--gp-sm) var(--gp-sm);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  flex: 1;
+}
+.mini-card-name {
+  font-family: var(--gp-font-display);
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.2;
+  color: var(--gp-cream);
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  word-break: break-word;
+  hyphens: auto;
+  min-height: 32px;
+}
+.mini-card-meta {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 10px;
+  color: var(--gp-text-muted);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.mini-card-score {
+  font-family: var(--gp-font-display);
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--gp-gold);
+}
+.mini-card-meta-sep {
+  color: var(--gp-text-faint);
+}
+.mini-card-buy {
+  margin-top: auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 6px 4px;
+  background: #050505;
+  color: var(--gp-gold-bright);
+  border: 1px solid var(--gp-gold);
+  border-radius: var(--gp-r-sm);
+  font-size: 10px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  text-decoration: none;
+  text-align: center;
+  min-height: 30px;
+}
+.mini-card-buy:hover {
+  background: var(--gp-gold);
+  color: #050505;
+}
+.mini-card-buy.disabled {
+  background: transparent;
+  color: var(--gp-text-faint);
+  border: 1px dashed var(--gp-border);
+  cursor: not-allowed;
 }

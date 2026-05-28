@@ -1,14 +1,19 @@
-import { useMemo, useState } from 'react';
+import { useMemo } from 'react';
 import { ComparisonGrid } from '@/components/ComparisonGrid';
 import { ConditionStats } from '@/components/ConditionStats';
 import { GlueCard } from '@/components/GlueCard';
 import { Screen } from '@/components/Screen';
 import { Section } from '@/components/Section';
-import { TimelineRow } from '@/components/TimelineRow';
+import { TimeBlockSection } from '@/components/TimeBlockSection';
 import { useWeather } from '@/context/WeatherContext';
-import { getBlockForHour } from '@/data/timeBlocks';
-import { recommendForBlocks, topRecommendations } from '@/logic/recommendation';
-import { DailyForecast, WeatherConditions } from '@/types';
+import { getBlockForHour, TIME_BLOCKS } from '@/data/timeBlocks';
+import {
+  conditionsForBlock,
+  rankGlues,
+  topRecommendations,
+  VIABLE_THRESHOLD,
+} from '@/logic/recommendation';
+import { BlockRecommendation, DailyForecast, WeatherConditions } from '@/types';
 
 function currentConditions(forecast: DailyForecast): WeatherConditions {
   const hour = new Date().getHours();
@@ -19,6 +24,25 @@ function currentConditions(forecast: DailyForecast): WeatherConditions {
     humidity: snap.humidity,
     pressureHpa: snap.pressureHpa,
   };
+}
+
+/**
+ * Build a BlockRecommendation per time block that includes EVERY viable
+ * glue for that block's conditions — not just the top 3 — so each block's
+ * horizontal scroll row can reveal the full set of matches.
+ */
+function blocksWithViable(forecast: DailyForecast): BlockRecommendation[] {
+  const out: BlockRecommendation[] = [];
+  for (const block of TIME_BLOCKS) {
+    const conditions = conditionsForBlock(forecast, block);
+    if (!conditions) continue;
+    const all = rankGlues(conditions);
+    const viable = all.filter((s) => s.score >= VIABLE_THRESHOLD);
+    // Always show at least the single best, even if nothing clears the bar
+    const ranked = viable.length ? viable : all.slice(0, 1);
+    out.push({ block, conditions, ranked });
+  }
+  return out;
 }
 
 interface HomeProps {
@@ -35,16 +59,14 @@ export function HomeScreen({ onGoManual }: HomeProps) {
     refreshFromIP,
     refineWithGPS,
   } = useWeather();
-  const [selectedBlockId, setSelectedBlockId] = useState<string | null>(null);
 
   const blocks = useMemo(
-    () => (forecast ? recommendForBlocks(forecast) : []),
+    () => (forecast ? blocksWithViable(forecast) : []),
     [forecast]
   );
   const current = forecast ? currentConditions(forecast) : null;
   const topNow = current ? topRecommendations(current, 3) : [];
   const activeBlockId = getBlockForHour(new Date().getHours()).id;
-  const selected = blocks.find((b) => b.block.id === selectedBlockId);
 
   const subtitle = forecast
     ? `${forecast.location.label ?? 'Your location'} · ${
@@ -132,32 +154,18 @@ export function HomeScreen({ onGoManual }: HomeProps) {
 
       {blocks.length ? (
         <Section
-          title="Today's Timeline"
-          subtitle="Best glue for each block. Tap a block for ranked picks."
+          title="Today by the hour"
+          subtitle="Every glue that works in each block — swipe each row to see more."
         >
-          {blocks.map((rec) => (
-            <TimelineRow
-              key={rec.block.id}
-              recommendation={rec}
-              active={rec.block.id === activeBlockId}
-              onPress={() =>
-                setSelectedBlockId((prev) =>
-                  prev === rec.block.id ? null : rec.block.id
-                )
-              }
-            />
-          ))}
-        </Section>
-      ) : null}
-
-      {selected ? (
-        <Section
-          title={`${selected.block.label} Picks`}
-          subtitle={`${Math.round(selected.conditions.temperatureF)}°F · ${Math.round(
-            selected.conditions.humidity
-          )}% RH`}
-        >
-          <ComparisonGrid picks={selected.ranked} />
+          <div className="time-blocks">
+            {blocks.map((rec) => (
+              <TimeBlockSection
+                key={rec.block.id}
+                rec={rec}
+                active={rec.block.id === activeBlockId}
+              />
+            ))}
+          </div>
         </Section>
       ) : null}
     </Screen>
