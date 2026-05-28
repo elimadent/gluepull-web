@@ -111,18 +111,19 @@
   border: 1px solid var(--gp-border);
 }
 
-/* Button reset wrapped in :where() so it carries 0 specificity — single-class
- * button selectors like .preset / .band / .toggle (specificity 0,1,0) win
- * cleanly over this default, instead of being clobbered by `.app button`. */
-:where(.app) button {
+/* Button base — only the inheritance bits, no background/border/padding reset.
+ * Every interactive button in this app carries its own utility class
+ * (.preset, .cta, .apply, .band, .toggle, .tab, .bundle-toggle, .timeline,
+ * .glue-head, .screen-refresh) that sets background, border, and padding
+ * itself. Earlier versions reset those here, but the reset's higher
+ * specificity beat the single-class button selectors and silently erased
+ * their styling — visible in iOS Safari where the cascade left "Get
+ * Recommendations" rendering as an unstyled button. */
+.app button {
   font-family: inherit;
   color: inherit;
   cursor: pointer;
   font-size: inherit;
-  background: transparent;
-  border: 0;
-  padding: 0;
-  margin: 0;
 }
 .app input,
 .app select,

@@ -6,6 +6,14 @@ import { useWeather } from '@/context/WeatherContext';
 import { topRecommendations } from '@/logic/recommendation';
 import { GlueScore, WeatherConditions } from '@/types';
 
+/*
+ * Barometric pressure is intentionally NOT collected from the user — it's a
+ * weak signal in the scoring (5% weight) and asking for it makes manual entry
+ * feel fussier than it should. We hardcode standard sea-level 1013 hPa so the
+ * scoring math still has a real input.
+ */
+const DEFAULT_PRESSURE_HPA = 1013;
+
 interface FieldProps {
   label: string;
   unit: string;
@@ -60,14 +68,12 @@ export function ManualEntryScreen() {
   const { setManualConditions } = useWeather();
   const [temp, setTemp] = useState('');
   const [humidity, setHumidity] = useState('');
-  const [pressure, setPressure] = useState('1013');
   const [error, setError] = useState<string | null>(null);
   const [results, setResults] = useState<GlueScore[] | null>(null);
 
   const apply = () => {
     const t = Number(temp);
     const h = Number(humidity);
-    const p = Number(pressure);
 
     if (!temp || Number.isNaN(t) || t < -20 || t > 140) {
       return setError('Enter a temperature between -20 and 140 °F.');
@@ -75,21 +81,18 @@ export function ManualEntryScreen() {
     if (!humidity || Number.isNaN(h) || h < 0 || h > 100) {
       return setError('Enter humidity between 0 and 100 %.');
     }
-    if (Number.isNaN(p) || p < 870 || p > 1090) {
-      return setError('Enter pressure between 870 and 1090 hPa.');
-    }
     setError(null);
     const conditions: WeatherConditions = {
       temperatureF: t,
       humidity: h,
-      pressureHpa: p,
+      pressureHpa: DEFAULT_PRESSURE_HPA,
     };
     setManualConditions(conditions);
     setResults(topRecommendations(conditions, 3));
   };
 
   return (
-    <Screen title="Manual Entry" subtitle="Dial in conditions by hand.">
+    <Screen title="Manual Entry" subtitle="Punch in conditions and get ranked picks.">
       <form
         className="form"
         onSubmit={(e) => {
@@ -139,16 +142,6 @@ export function ManualEntryScreen() {
           onChange={setHumidity}
           placeholder="55"
           help="Relative humidity. Coastal mornings run high; desert afternoons run low."
-        />
-        <Field
-          id="gp-pressure"
-          label="Barometric Pressure"
-          unit="hPa"
-          icon="🧭"
-          value={pressure}
-          onChange={setPressure}
-          placeholder="1013"
-          help="Optional fine-tune — 1013 is standard sea level. Low pressure can mean incoming damp weather."
         />
 
         {error ? <div className="error">{error}</div> : null}
