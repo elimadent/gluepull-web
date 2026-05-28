@@ -402,7 +402,11 @@
   margin-top: var(--gp-md);
   position: relative;
   transition: border-color 200ms ease, box-shadow 200ms ease;
+  /* When the compare-grid jumps a user to this card via anchor scroll, leave
+   * a little breathing room so it doesn't land flush against the screen top. */
+  scroll-margin-top: var(--gp-lg);
 }
+html { scroll-behavior: smooth; }
 .glue-card.top {
   border-color: rgba(212, 175, 55, 0.45);
   box-shadow:
@@ -429,8 +433,8 @@
   cursor: default;
 }
 .product-thumb {
-  width: 64px;
-  height: 64px;
+  width: 96px;
+  height: 96px;
   border-radius: var(--gp-r-sm);
   background: var(--gp-surface-3);
   border: 1px solid var(--gp-border);
@@ -480,26 +484,8 @@
   text-transform: uppercase;
   letter-spacing: 1.1px;
 }
-.glue-score {
-  text-align: center;
-  min-width: 64px;
-  padding-top: 4px;
-}
-.glue-score-value {
-  font-family: var(--gp-font-display);
-  color: var(--gp-gold);
-  font-size: var(--gp-fs-xl);
-  font-weight: 700;
-  line-height: 1;
-  text-shadow: 0 0 12px rgba(212, 175, 55, 0.25);
-}
-.glue-score-label {
-  color: var(--gp-text-faint);
-  font-size: 10px;
-  text-transform: uppercase;
-  letter-spacing: 1.4px;
-  margin-top: 4px;
-}
+/* (Per-card "99 MATCH" score block removed — kept rank badge as the only
+ * relative-quality cue; chips below differentiate by attribute.) */
 
 /* Product description expansion */
 .product-desc {
@@ -718,6 +704,16 @@
   min-width: 0;
   text-align: center;
   position: relative;
+  cursor: pointer;
+  transition: border-color 150ms ease, background-color 150ms ease;
+}
+.compare-col:hover {
+  border-color: var(--gp-gold-deep);
+  background: var(--gp-surface-alt);
+}
+.compare-col:focus-visible {
+  outline: 2px solid var(--gp-gold);
+  outline-offset: 2px;
 }
 .compare-col.r1 {
   border-color: rgba(212, 175, 55, 0.45);
@@ -734,8 +730,8 @@
 .compare-col.r2 .compare-rank { color: var(--gp-silver); }
 .compare-col.r3 .compare-rank { color: var(--gp-bronze); }
 .compare-img {
-  width: 64px;
-  height: 64px;
+  width: 100%;
+  aspect-ratio: 1 / 1;
   border-radius: var(--gp-r-sm);
   object-fit: cover;
   background: var(--gp-surface-3);
@@ -763,14 +759,8 @@
   min-height: 32px;
   width: 100%;
 }
-.compare-score {
-  font-family: var(--gp-font-display);
-  font-size: 28px;
-  font-weight: 700;
-  color: var(--gp-gold);
-  line-height: 1;
-  text-shadow: 0 0 12px rgba(212, 175, 55, 0.25);
-}
+/* (compare-score / compare-score-label removed — top-3 picks are virtually
+ * always the same score, so the "99/99/99" was confusing more than clarifying.) */
 .compare-meta {
   display: flex;
   flex-direction: column;
@@ -1103,6 +1093,17 @@
   min-height: var(--gp-touch);
   width: 100%;
   min-width: 0;
+  -webkit-appearance: none;
+  appearance: none;
+  border-radius: 0;
+  -webkit-tap-highlight-color: transparent;
+}
+/* The .input-row :focus-within border IS the focus cue — suppress the input's
+ * own :focus-visible outline so iOS doesn't paint a second gold rectangle
+ * around the inner element. */
+.app .input-row input:focus,
+.app .input-row input:focus-visible {
+  outline: none;
 }
 .input-row input::placeholder {
   color: var(--gp-text-faint);
@@ -1135,21 +1136,23 @@
   align-items: center;
   justify-content: center;
   gap: var(--gp-sm);
-  background: linear-gradient(180deg, var(--gp-gold-bright), var(--gp-gold), var(--gp-gold-dark));
-  color: #1a1308;
-  font-weight: 700;
-  letter-spacing: 0.5px;
+  background: #050505;
+  color: var(--gp-gold-bright);
+  border: 1.5px solid var(--gp-gold);
+  font-weight: 800;
+  font-size: var(--gp-fs-md);
+  letter-spacing: 1.5px;
   text-transform: uppercase;
   min-height: var(--gp-touch);
   border-radius: var(--gp-r-md);
   width: 100%;
-  transition: filter 150ms ease, transform 80ms ease;
+  transition: background-color 150ms ease, color 150ms ease, transform 80ms ease;
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.3),
-    0 2px 6px rgba(0, 0, 0, 0.5);
+    inset 0 1px 0 rgba(212, 175, 55, 0.18),
+    0 2px 10px rgba(0, 0, 0, 0.5);
 }
-.apply:hover { filter: brightness(1.05); }
-.apply:active { filter: brightness(0.92); transform: scale(0.99); }
+.apply:hover { background: var(--gp-gold); color: #050505; }
+.apply:active { background: var(--gp-gold-dark); color: #050505; transform: scale(0.99); }
 .preset-row {
   display: flex;
   flex-wrap: wrap;
@@ -1308,8 +1311,8 @@
   margin-bottom: var(--gp-md);
 }
 .tip-icon-wrap {
-  width: 40px;
-  height: 40px;
+  width: 44px;
+  height: 44px;
   background: var(--gp-bg);
   border: 1px solid var(--gp-gold-deep);
   border-radius: var(--gp-r-sm);
@@ -1318,6 +1321,10 @@
   justify-content: center;
   font-size: 20px;
   flex-shrink: 0;
+  color: var(--gp-gold-bright);
+}
+.tip-icon-wrap svg {
+  display: block;
 }
 .tip-title {
   font-family: var(--gp-font-display);
@@ -1452,9 +1459,10 @@ body.gp-standalone {
   flex: 0 0 auto;
 }
 
-/* Mini glue card — horizontal-scroll item */
+/* Mini glue card — horizontal-scroll item. Image-first; the product photo
+ * IS the product, so we let it own most of the card. */
 .mini-card {
-  width: 144px;
+  width: 180px;
   background: var(--gp-surface);
   border: 1px solid var(--gp-border);
   border-radius: var(--gp-r-md);
@@ -1473,11 +1481,11 @@ body.gp-standalone {
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 30px;
+  font-size: 38px;
   color: var(--gp-text-faint);
 }
 .mini-card-body {
-  padding: var(--gp-sm) var(--gp-sm) var(--gp-sm);
+  padding: var(--gp-md) var(--gp-sm) var(--gp-sm);
   display: flex;
   flex-direction: column;
   gap: 6px;
@@ -1485,7 +1493,7 @@ body.gp-standalone {
 }
 .mini-card-name {
   font-family: var(--gp-font-display);
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 700;
   line-height: 1.2;
   color: var(--gp-cream);
@@ -1495,26 +1503,18 @@ body.gp-standalone {
   -webkit-box-orient: vertical;
   word-break: break-word;
   hyphens: auto;
-  min-height: 32px;
+  min-height: 34px;
 }
+/* (mini-card-score row removed — see compare-score note.) */
 .mini-card-meta {
-  display: flex;
-  align-items: center;
-  gap: 4px;
   font-size: 10px;
   color: var(--gp-text-muted);
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.5px;
-}
-.mini-card-score {
-  font-family: var(--gp-font-display);
-  font-size: 16px;
-  font-weight: 700;
-  color: var(--gp-gold);
-}
-.mini-card-meta-sep {
-  color: var(--gp-text-faint);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 .mini-card-buy {
   margin-top: auto;

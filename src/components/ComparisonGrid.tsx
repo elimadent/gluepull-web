@@ -8,22 +8,41 @@ interface ComparisonGridProps {
 
 /**
  * Side-by-side comparison of the top picks. Goal: glance and know which
- * stick to buy. Each column packs image + name + score + the headline
- * attributes + a one-tap Buy CTA. Detailed cards live below this grid.
+ * stick to buy. Tap a card (anywhere except the Buy button) to jump to its
+ * full breakdown below.
  */
 export function ComparisonGrid({ picks }: ComparisonGridProps) {
   const top = picks.slice(0, 3);
   if (!top.length) return null;
 
+  const jumpTo = (glueId: string) => {
+    const el = document.getElementById(`gp-glue-${glueId}`);
+    if (!el) return;
+    el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  };
+
   return (
-    <div className="compare-grid" role="table" aria-label="Top picks comparison">
+    <div className="compare-grid" role="list" aria-label="Top picks comparison">
       {top.map((p, i) => {
         const product = getAnsonProduct(p.glue.id);
         const matched = product?.matched === true;
         const displayName = matched ? product.name : p.glue.name;
         const rankClass = i === 0 ? 'r1' : i === 1 ? 'r2' : 'r3';
         return (
-          <div key={p.glue.id} className={`compare-col ${rankClass}`} role="row">
+          <div
+            key={p.glue.id}
+            className={`compare-col ${rankClass}`}
+            role="listitem"
+            onClick={() => jumpTo(p.glue.id)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                jumpTo(p.glue.id);
+              }
+            }}
+            tabIndex={0}
+            aria-label={`Jump to ${displayName} details`}
+          >
             <div className="compare-rank">#{i + 1}</div>
             {matched && product.imageUrl ? (
               <img
@@ -38,10 +57,8 @@ export function ComparisonGrid({ picks }: ComparisonGridProps) {
               </div>
             )}
             <h3 className="compare-name">{displayName}</h3>
-            <div className="compare-score">{p.score}</div>
             <div className="compare-meta">
-              <div className="compare-meta-row">{p.glue.color}</div>
-              <div className="compare-meta-row">{p.glue.strength}</div>
+              <div className="compare-meta-row">{p.glue.strength} strength</div>
               <div className="compare-meta-row">{p.glue.gunTemp} gun</div>
             </div>
             {matched ? (
@@ -51,6 +68,7 @@ export function ComparisonGrid({ picks }: ComparisonGridProps) {
                 target={linkTarget(product.productUrl)}
                 rel="noopener noreferrer"
                 aria-label={`Buy ${displayName} on Anson PDR`}
+                onClick={(e) => e.stopPropagation()}
               >
                 <span aria-hidden>🛒</span>
                 <span>Buy</span>

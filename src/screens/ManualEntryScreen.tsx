@@ -157,7 +157,7 @@ export function ManualEntryScreen() {
         <>
           <Section
             title="Top 3 picks — compared"
-            subtitle="Tap any card below for full pros, cons, and product details."
+            subtitle="Tap any card to jump down to its full breakdown."
           >
             <ComparisonGrid picks={results} />
           </Section>

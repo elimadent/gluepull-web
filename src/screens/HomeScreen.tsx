@@ -135,7 +135,7 @@ export function HomeScreen({ onGoManual }: HomeProps) {
       {topNow.length ? (
         <Section
           title="Top 3 picks — compared"
-          subtitle="Tap a card below for full pros, cons, and product details."
+          subtitle="Tap any card to jump down to its full breakdown."
         >
           <ComparisonGrid picks={topNow} />
         </Section>

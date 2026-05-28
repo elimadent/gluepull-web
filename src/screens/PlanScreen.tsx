@@ -141,8 +141,8 @@ export function PlanScreen() {
 
       {picks.length ? (
         <Section
-          title="Glues to Stock"
-          subtitle={`Based on the ${horizonLabel} where this is the top pick.`}
+          title="Buy these glues"
+          subtitle={`Each row is a glue that wins the most days in your ${horizonLabel} forecast — pre-buy by how often you'll use it.`}
         >
           {picks.map(({ glue, days: d }) => (
             <PlanRow key={glue.id} glue={glue} days={d} />

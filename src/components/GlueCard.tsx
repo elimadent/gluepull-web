@@ -6,6 +6,9 @@ import { colors } from '@/theme/theme';
 import { linkTarget } from '@/utils/link';
 import { GlueScore } from '@/types';
 
+// NOTE: glue.color (Nude/Brown/Black/etc) intentionally not rendered as a chip
+// any more — it's already visible in the product photo and the product name.
+
 interface GlueCardProps {
   score: GlueScore;
   /** When set, shows a #1/#2/#3 medal badge. */
@@ -25,7 +28,7 @@ function Bullet({ icon, tint, text }: { icon: string; tint: string; text: string
 
 export function GlueCard({ score, rank }: GlueCardProps) {
   const [descOpen, setDescOpen] = useState(false);
-  const { glue, score: value, reasons, warnings } = score;
+  const { glue, reasons, warnings } = score;
 
   const product = getAnsonProduct(glue.id);
   const matched = product?.matched === true;
@@ -36,7 +39,10 @@ export function GlueCard({ score, rank }: GlueCardProps) {
   const canToggleDesc = matched && !!description;
 
   return (
-    <article className={`glue-card${rank === 1 ? ' top' : ''}`}>
+    <article
+      id={`gp-glue-${glue.id}`}
+      className={`glue-card${rank === 1 ? ' top' : ''}`}
+    >
       <button
         type="button"
         className="glue-head"
@@ -72,10 +78,6 @@ export function GlueCard({ score, rank }: GlueCardProps) {
             <p className="not-linked">⚠ Not yet listed on ansonpdr.com</p>
           )}
         </div>
-        <div className="glue-score">
-          <div className="glue-score-value">{value}</div>
-          <div className="glue-score-label">match</div>
-        </div>
       </button>
 
       {canToggleDesc && descOpen ? (
@@ -83,7 +85,6 @@ export function GlueCard({ score, rank }: GlueCardProps) {
       ) : null}
 
       <div className="chips">
-        <Chip label={glue.color} tint={colors.accent} />
         <Chip label={`${glue.strength} strength`} />
         <Chip label={`${glue.gunTemp} gun`} />
         <Chip label={glue.pullMethod} />
