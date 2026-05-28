@@ -115,13 +115,15 @@ export function getCurrentLocation(): Promise<LocationInfo> {
 }
 
 /**
- * Fetch today's hourly forecast (temperature °F, relative humidity %,
+ * Fetch a single day's hourly forecast (temperature °F, relative humidity %,
  * surface/barometric pressure hPa) for the given location via Open-Meteo.
+ * Pass a future ISO date to forecast that day in advance (Open-Meteo supports
+ * roughly 16 days ahead).
  */
 export async function fetchDailyForecast(
-  location: LocationInfo
+  location: LocationInfo,
+  date: string = todayISO()
 ): Promise<DailyForecast> {
-  const date = todayISO();
   const params = new URLSearchParams({
     latitude: String(location.latitude),
     longitude: String(location.longitude),

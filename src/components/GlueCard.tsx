@@ -4,7 +4,35 @@ import { RankBadge } from '@/components/RankBadge';
 import { getAnsonProduct } from '@/data/products';
 import { colors } from '@/theme/theme';
 import { linkTarget } from '@/utils/link';
-import { GlueScore } from '@/types';
+import { Glue, GlueScore } from '@/types';
+
+/**
+ * Translate the dataset's optimalTemp/optimalHumidity/strength into the
+ * shop-friendly "what panel conditions is this best for" lines that show
+ * inline on every glue card.
+ */
+function bestPanelConditions(g: Glue): string[] {
+  const lines: string[] = [];
+  const tMid = (g.optimalTemp.min + g.optimalTemp.max) / 2;
+  if (tMid >= 95) lines.push('☀️ Sun-baked panels — runs through summer heat without softening');
+  else if (tMid >= 80) lines.push('🌤️ Warm panels & outdoor shade in summer');
+  else if (tMid >= 70) lines.push('🏢 Indoor shop / mild outdoor — the daily-driver window');
+  else if (tMid >= 60) lines.push('⛅ Cool mornings & shoulder seasons');
+  else lines.push('❄️ Cold panels — winter mornings, refrigerated shops');
+
+  if (g.optimalHumidity.max <= 40) lines.push('🏜 Best in dry air — desert / arid climates');
+  else if (g.optimalHumidity.min >= 55) lines.push('💧 Holds up in humid air — Gulf coast, summer monsoons');
+  else lines.push('🌫 Comfortable across an average humidity range');
+
+  if (g.strength === 'Super High') {
+    lines.push('💪 Lateral tension / collision damage — big high-tension dents');
+  } else if (g.strength === 'High') {
+    lines.push('🔨 Slide-hammer pulls on medium-to-large dents');
+  } else {
+    lines.push('🪶 Small dings, finish passes, clean release on factory paint');
+  }
+  return lines;
+}
 
 // NOTE: glue.color (Nude/Brown/Black/etc) intentionally not rendered as a chip
 // any more — it's already visible in the product photo and the product name.
@@ -88,6 +116,15 @@ export function GlueCard({ score, rank }: GlueCardProps) {
         <Chip label={`${glue.strength} strength`} />
         <Chip label={`${glue.gunTemp} gun`} />
         <Chip label={glue.pullMethod} />
+      </div>
+
+      <div className="best-for-panel">
+        <div className="best-for-label">Best Panel Conditions</div>
+        <ul className="best-for-list">
+          {bestPanelConditions(glue).map((line, i) => (
+            <li key={i}>{line}</li>
+          ))}
+        </ul>
       </div>
 
       {reasons.length ? (

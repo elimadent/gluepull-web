@@ -1622,3 +1622,276 @@ body.gp-standalone {
   border: 1px dashed var(--gp-border);
   cursor: not-allowed;
 }
+
+/* Native range slider styled to match the tuxedo look */
+.gp-slider {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 4px;
+  background: var(--gp-border);
+  border-radius: 4px;
+  outline: none;
+  margin-top: var(--gp-md);
+}
+.gp-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--gp-gold);
+  border: 2px solid #050505;
+  cursor: pointer;
+  box-shadow: 0 0 12px rgba(212, 175, 55, 0.4);
+}
+.gp-slider::-moz-range-thumb {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--gp-gold);
+  border: 2px solid #050505;
+  cursor: pointer;
+}
+.gp-slider:focus-visible {
+  outline: 2px solid var(--gp-gold-bright);
+  outline-offset: 4px;
+}
+
+/* Collapsible sections (native <details>/<summary>) */
+.collapsible {
+  margin-top: var(--gp-lg);
+  background: var(--gp-surface);
+  border: 1px solid var(--gp-border);
+  border-radius: var(--gp-r-lg);
+  overflow: hidden;
+}
+.collapsible.inner {
+  margin-top: var(--gp-md);
+  background: var(--gp-surface-alt);
+  border-color: var(--gp-border-soft);
+  border-radius: var(--gp-r-md);
+}
+.collapsible > summary {
+  list-style: none;
+  cursor: pointer;
+  padding: var(--gp-md) var(--gp-lg);
+  display: flex;
+  align-items: center;
+  gap: var(--gp-sm);
+  user-select: none;
+}
+.collapsible > summary::-webkit-details-marker { display: none; }
+.collapsible-eyebrow {
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--gp-gold);
+  margin-right: var(--gp-sm);
+}
+.collapsible-title {
+  font-family: var(--gp-font-display);
+  font-size: var(--gp-fs-lg);
+  font-weight: 700;
+  color: var(--gp-cream);
+  flex: 1;
+}
+.collapsible-title.small {
+  font-size: var(--gp-fs-md);
+}
+.collapsible-chev {
+  color: var(--gp-text-muted);
+  font-size: 18px;
+  transition: transform 150ms ease;
+}
+.collapsible[open] > summary > .collapsible-chev {
+  transform: rotate(180deg);
+}
+.collapsible-body {
+  padding: 0 var(--gp-lg) var(--gp-lg);
+  display: flex;
+  flex-direction: column;
+  gap: var(--gp-lg);
+}
+.collapsible.inner > .collapsible-body {
+  padding: 0 var(--gp-md) var(--gp-md);
+  gap: var(--gp-md);
+}
+
+/* Work-scene cards */
+.scene-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--gp-sm);
+  padding: 0 var(--gp-lg) var(--gp-lg);
+}
+.scene-card {
+  background: var(--gp-surface-alt);
+  border: 1px solid var(--gp-border);
+  border-radius: var(--gp-r-md);
+  padding: var(--gp-md);
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 150ms ease, background-color 150ms ease;
+  min-height: 84px;
+}
+.scene-card:hover {
+  border-color: var(--gp-gold-deep);
+}
+.scene-card.active {
+  border-color: var(--gp-gold);
+  background: var(--gp-surface-3);
+  box-shadow: inset 0 0 0 1px var(--gp-gold-deep);
+}
+.scene-icon { font-size: 22px; line-height: 1; }
+.scene-label {
+  color: var(--gp-cream);
+  font-size: var(--gp-fs-sm);
+  font-weight: 800;
+}
+.scene-sub {
+  color: var(--gp-text-muted);
+  font-size: var(--gp-fs-xs);
+  font-weight: 600;
+}
+.scene-vals {
+  margin-top: 4px;
+  color: var(--gp-gold);
+  font-family: var(--gp-font-display);
+  font-size: 15px;
+  font-weight: 700;
+}
+
+/* Trip planner extras */
+.trip-panel { margin-top: var(--gp-xl); }
+.trip-dek {
+  color: var(--gp-text-muted);
+  font-size: var(--gp-fs-sm);
+  font-style: italic;
+  line-height: 1.45;
+}
+.trip-controls,
+.trip-when {
+  display: flex;
+  gap: var(--gp-md);
+  flex-wrap: wrap;
+  align-items: flex-end;
+}
+.trip-field {
+  flex: 1;
+  min-width: 140px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.trip-field-label {
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--gp-text-muted);
+}
+.trip-select {
+  width: 100%;
+  background: var(--gp-bg);
+  border: 1px solid var(--gp-border);
+  border-radius: var(--gp-r-md);
+  color: var(--gp-text);
+  font-family: var(--gp-font-body);
+  font-size: var(--gp-fs-md);
+  padding: 12px var(--gp-md);
+  min-height: 44px;
+  appearance: none;
+  -webkit-appearance: none;
+  padding-right: 36px;
+  background-image: linear-gradient(45deg, transparent 48%, var(--gp-gold) 48%, var(--gp-gold) 52%, transparent 52%);
+  background-position: right 16px center;
+  background-size: 12px 12px;
+  background-repeat: no-repeat;
+}
+.trip-select:focus {
+  outline: none;
+  border-color: var(--gp-gold);
+}
+.trip-actions {
+  display: flex;
+  gap: var(--gp-sm);
+  flex-wrap: wrap;
+}
+.trip-status {
+  background: rgba(212, 175, 55, 0.08);
+  border: 1px solid var(--gp-gold-deep);
+  border-radius: var(--gp-r-sm);
+  padding: var(--gp-sm) var(--gp-md);
+  color: var(--gp-cream);
+  font-size: var(--gp-fs-sm);
+}
+
+/* Hail hotspot quick chips */
+.hint {
+  color: var(--gp-text-faint);
+  font-size: var(--gp-fs-xs);
+  font-style: italic;
+}
+.hotspot-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.hotspot-chip {
+  background: var(--gp-surface);
+  border: 1px solid var(--gp-border);
+  border-radius: var(--gp-r-pill);
+  color: var(--gp-cream);
+  font-size: var(--gp-fs-xs);
+  font-weight: 700;
+  padding: 8px 12px;
+  min-height: 34px;
+  letter-spacing: 0.3px;
+  transition: border-color 150ms ease, background-color 150ms ease, color 150ms ease;
+}
+.hotspot-chip:hover {
+  border-color: var(--gp-gold);
+  background: var(--gp-surface-alt);
+  color: var(--gp-gold-bright);
+}
+.hotspot-chip:disabled {
+  opacity: 0.5;
+  cursor: progress;
+}
+
+/* Best Panel Conditions block inside GlueCard */
+.best-for-panel {
+  margin-top: var(--gp-lg);
+  padding: var(--gp-md);
+  background: var(--gp-bg);
+  border: 1px solid var(--gp-border);
+  border-left: 2px solid var(--gp-gold);
+  border-radius: var(--gp-r-sm);
+}
+.best-for-label {
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 1.6px;
+  text-transform: uppercase;
+  color: var(--gp-gold);
+  margin-bottom: var(--gp-sm);
+}
+.best-for-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.best-for-list li {
+  font-size: var(--gp-fs-sm);
+  line-height: 1.45;
+  color: var(--gp-text);
+}
