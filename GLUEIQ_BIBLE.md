@@ -8,7 +8,7 @@
 > **Never put live secrets/tokens in this file.** It is committed to the repo.
 > Secrets live only in a gitignored `.env.local`.
 
-Last updated: 2026-06-01
+Last updated: 2026-06-01 (live best-seller feed implemented)
 
 ---
 
@@ -191,14 +191,22 @@ Chronology of what Seth asked for, newest understanding last:
 
 ---
 
-## 7. Open questions (confirm before large changes)
+## 7. Open questions
 - **Q1.** Which token type did we actually receive — Storefront or Admin?
-- **Q2.** How are glue products identified in the store — `product_type`, a
-  tag, or a specific collection handle?
-- **Q3.** Should the live feed fully replace static glues, or only drive the
-  Library list ordering (keeping curated weather scoring on static metadata)?
-- **Q4.** Is "live as of each deploy" (build-time) acceptable, or must it be
-  truly real-time in the browser?
+  → STILL OPEN. The `shpss_` value Seth sent cannot be used (it's the API
+    secret key). We need a **Storefront token** with
+    `unauthenticated_read_product_listings`. The code is built and waiting for it.
+- **Q2.** How are glue products identified in the store?
+  → RESOLVED by design. We did NOT need the store's taxonomy: the static
+    `src/data/glues.ts` is the canonical "what is a glue" set (41 sticks), keyed
+    by Shopify handle. The live feed only supplies best-selling *rank* + the
+    `glue-featured` flag, matched onto those handles. Robust to store changes.
+- **Q3.** Replace static glues, or only drive ordering?
+  → RESOLVED: only drives **ordering** (and the featured pin). Weather-scoring
+    metadata stays on the static data (Home screen unchanged). The Library is
+    the screen that now orders by best-selling.
+- **Q4.** Build-time vs truly live?
+  → RESOLVED: truly live, client-side (Approach A), cached 1h in localStorage.
 
 ---
 
@@ -218,6 +226,28 @@ Chronology of what Seth asked for, newest understanding last:
 ---
 
 ## 10. Changelog
+- **2026-06-01 (later)** — **Implemented the live best-seller feed (Approach A).**
+  New files:
+  - `src/services/catalog.ts` — fetches Storefront GraphQL `products(sortKey:
+    BEST_SELLING)` from `ansonpdr.com`, reads token from
+    `VITE_SHOPIFY_STOREFRONT_TOKEN` or `window.GLUEIQ_SHOPIFY_TOKEN`, caches the
+    ranking 1h in localStorage, returns null (→ static fallback) with no token
+    or on any error. Featured tag constant: `glue-featured`.
+  - `src/logic/bestSellers.ts` — pure `orderGluesByBestSeller()` helper:
+    best-selling order, unranked glues sink to bottom (stable), featured glues
+    pinned to top and removed from the ranked remainder (R3).
+  - `src/logic/__tests__/bestSellers.test.ts` — 6 unit tests (all pass).
+  - `src/hooks/useBestSellerOrder.ts` — loads the ranking on mount; exposes
+    `status: 'static' | 'loading' | 'live'`.
+  Changed:
+  - `src/screens/GlueLibraryScreen.tsx` — "Best selling" (default) vs "Temp
+    range" sort toggle; honest subtitle (live / loading / temp fallback);
+    `#1 best seller` and `Featured` badges when live.
+  - `src/components/GlueCard.tsx` + `src/styles.css` — optional `badge` pill.
+  Verified: typecheck, 13/13 tests, `build`, `build:widget` all pass.
+  STATUS: feature-complete but DORMANT until a Storefront token is supplied —
+  with no token it silently shows the existing temp-range order, so it's safe to
+  ship now and "turns on" the moment the token lands. NOTHING else needs to change.
 - **2026-06-01** — Bible created. Captured project context, Shopify integration
   state, Seth's refined direction (pull all glue, sort by best selling, optional
   `glue-featured` tag), and the credential analysis: the `shpss_` value Seth sent

@@ -63,9 +63,12 @@ interface GlueCardProps {
   /** Optional per-current-conditions reasons & warnings. Omit on the Library
    *  screen, the catalog should be static (no live scoring against weather). */
   match?: { reasons: string[]; warnings: string[] };
+  /** Optional small text pill shown in the header (e.g. "Featured",
+   *  "#1 best seller") when the live catalog feed is driving the order. */
+  badge?: string;
 }
 
-export function GlueCard({ glue, rank, match }: GlueCardProps) {
+export function GlueCard({ glue, rank, match, badge }: GlueCardProps) {
   const [descOpen, setDescOpen] = useState(false);
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const reasons = match?.reasons ?? [];
@@ -129,6 +132,7 @@ export function GlueCard({ glue, rank, match }: GlueCardProps) {
           <GlueStickPlaceholder color={glue.color} className="product-thumb placeholder-svg" />
         )}
         <div className="glue-head-text">
+          {badge ? <span className="glue-flag">{badge}</span> : null}
           <h3 className="glue-name">{displayName}</h3>
           {matched ? (
             <>

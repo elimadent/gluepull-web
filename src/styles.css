@@ -1038,6 +1038,19 @@ html { scroll-behavior: smooth; }
   flex: 1;
   min-width: 0;
 }
+.glue-flag {
+  display: inline-block;
+  margin-bottom: 5px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: var(--gp-accent);
+  color: #1a1205;
+  font-family: var(--gp-font-display);
+  font-size: var(--gp-fs-xs);
+  font-weight: 800;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+}
 .glue-name {
   font-family: var(--gp-font-display);
   font-size: var(--gp-fs-lg);
