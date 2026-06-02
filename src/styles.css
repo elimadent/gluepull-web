@@ -1,16 +1,17 @@
 /*
- * GluePull web — luxury dark/gold premium skin.
+ * GluePull web — Tequila Sugar Skull light skin.
  *
  * Two render modes share these rules:
  *   .app            standalone (full-page)
  *   .app.widget     Shopify in-page widget (fills its container, sticky-top tabs)
  *
- * Color story: true black + smoked charcoal, brushed-gold accents, warm
- * cream highlights. Display type uses a serif (Cormorant / Didot stack) for
- * the brand voice; body stays system-sans for max readability on phones.
+ * Color story: warm paper-white background + agave green / marigold orange /
+ * tequila gold accents (Día de los Muertos palette). Rainbow temperature band
+ * cue preserved: hot=red, cold=blue. All-sans typography aligns with
+ * ansonpdr.com. Tune --gp-accent to the exact Anson brand orange when shared.
  */
 
-@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 
 :where(.app),
 :where(.app *),
@@ -20,45 +21,47 @@
 }
 
 .app {
-  /* color tokens — luxury black/gold */
-  --gp-bg: #000000;
-  --gp-surface: #121212;
-  --gp-surface-alt: #1c1c1c;
-  --gp-surface-3: #262626;
-  /* `--gp-border` is the thin shiny gold trim worn by every card, panel,
-   * input, and tab on the app. Was `#2f2f2f` (charcoal); now a faint brushed
-   * gold against true black for a continuous metallic outline. */
-  --gp-border: rgba(212, 175, 55, 0.38);
-  --gp-border-soft: rgba(212, 175, 55, 0.15);
-  --gp-hairline: rgba(212, 175, 55, 0.18);
-  /* `--gp-text-muted` carries the bulk of secondary UI copy (spec rows,
-   * meta lines, time-block readouts). Bumped from #a8a39a → #c6c0b6 for
-   * better legibility on true-black backgrounds. */
-  --gp-text: #f3f1ea;
-  --gp-text-muted: #c6c0b6;
-  --gp-text-faint: #8a857d;
+  /* color tokens — Tequila Sugar Skull (light theme) */
+  --gp-bg: #FFFFFF;              /* paper white */
+  --gp-surface: #FAF6EE;         /* warm parchment */
+  --gp-surface-alt: #F1EADC;     /* light agave tan */
+  --gp-surface-3: #E8DFCB;       /* card press / hover */
+  /* Hairlines: warm graphite at low alpha — disappears on white, defines
+   * cards without the steel-blue chill of pure gray. */
+  --gp-border: rgba(20, 17, 13, 0.18);
+  --gp-border-soft: rgba(20, 17, 13, 0.10);
+  --gp-hairline: rgba(20, 17, 13, 0.08);
+  --gp-text: #14110D;            /* charred-agave near-black */
+  --gp-text-muted: #5A5247;
+  --gp-text-faint: #8A8378;
 
-  /* gold palette */
-  --gp-gold: #d4af37;            /* primary brushed gold */
-  --gp-gold-bright: #e8c768;     /* highlight tint */
-  --gp-gold-dark: #a08129;       /* pressed / shadow */
-  --gp-gold-deep: #6b5418;       /* deep gold for borders/dividers */
-  --gp-gold-glow: rgba(212, 175, 55, 0.14);
-  --gp-cream: #f5e9c8;           /* warm cream for occasional accents */
+  /* Tequila Sugar Skull palette — marigold + agave + gold */
+  --gp-accent: #F26522;          /* marigold orange (primary, ~Anson brand) */
+  --gp-accent-dark: #C44E13;
+  --gp-agave: #2EA85C;           /* agave green (secondary) */
+  --gp-marigold: #F5B82E;        /* tequila gold (tertiary) */
+  --gp-cream: #FFF4D9;           /* warm cream / image backplate */
+
+  /* Legacy --gp-gold-* aliases retained — point at marigold so existing
+   * gold gradients and borders re-skin automatically. */
+  --gp-gold: #F5B82E;
+  --gp-gold-bright: #FFD86A;
+  --gp-gold-dark: #C28A12;
+  --gp-gold-deep: #8A6207;
+  --gp-gold-glow: rgba(242, 101, 34, 0.18);
 
   /* legacy semantics — kept (other components reference these) */
-  --gp-accent: var(--gp-gold);
-  --gp-accent-dark: var(--gp-gold-dark);
-  --gp-silver: #c7ccd4;
-  --gp-bronze: #b97a3c;
-  --gp-good: #6ed28b;
-  --gp-warn: #f0c25b;
-  --gp-bad: #e26a6a;
-  --gp-hot: #ff6b3d;
-  --gp-warm: #ffa948;
-  --gp-moderate: #ffd66b;
-  --gp-cool: #7fc8ff;
-  --gp-cold: #7c97ff;
+  --gp-silver: #B8B0A0;
+  --gp-bronze: #C26C2A;
+  --gp-good: #2EA85C;
+  --gp-warn: #F26522;
+  --gp-bad: #E0383E;
+  /* Rainbow temperature cue preserved: hot=red, cold=blue */
+  --gp-hot: #E0383E;
+  --gp-warm: #F26522;
+  --gp-moderate: #F5B82E;
+  --gp-cool: #2EA85C;
+  --gp-cold: #2563D8;
 
   /* spacing */
   --gp-xs: 4px;
@@ -84,10 +87,10 @@
 
   --gp-touch: 52px;
 
-  --gp-font-body: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
+  --gp-font-body: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
     'Helvetica Neue', sans-serif;
-  --gp-font-display: 'Cormorant Garamond', 'Didot', 'Bodoni 72', 'Playfair Display',
-    Georgia, serif;
+  --gp-font-display: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
+    'Helvetica Neue', sans-serif;
 
   font-family: var(--gp-font-body);
   font-size: var(--gp-fs-md);
@@ -176,7 +179,7 @@
   line-height: 1.05;
   color: var(--gp-text);
   /* subtle warm tint for the title */
-  background: linear-gradient(180deg, #f5e9c8 0%, #d4af37 100%);
+  background: linear-gradient(180deg, var(--gp-marigold) 0%, var(--gp-accent) 100%);
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
@@ -318,7 +321,7 @@
   width: 100%;
 }
 .cta.primary {
-  background: #050505;
+  background: var(--gp-text);
   color: var(--gp-gold-bright);
   border: 1.5px solid var(--gp-gold);
   box-shadow:
@@ -326,7 +329,7 @@
     0 2px 10px rgba(0, 0, 0, 0.5);
 }
 .cta.primary:hover {
-  background: #0c0c0c;
+  background: var(--gp-surface);
   border-color: var(--gp-gold-bright);
   box-shadow:
     inset 0 0 0 1px var(--gp-gold-bright),
@@ -334,7 +337,7 @@
 }
 .cta.primary:active {
   transform: scale(0.985);
-  background: #0a0a0a;
+  background: var(--gp-surface-alt);
 }
 .cta.secondary {
   background: transparent;
@@ -551,7 +554,7 @@ html { scroll-behavior: smooth; }
   height: 96px;
   border-radius: var(--gp-r-sm);
   object-fit: cover;
-  background: #f4efe4;
+  background: var(--gp-cream);
   border: 1px solid var(--gp-gold-deep);
 }
 .drawer-img-placeholder {
@@ -626,7 +629,7 @@ html { scroll-behavior: smooth; }
 }
 .drawer-stepper-btn:hover:not(:disabled) {
   background: var(--gp-gold);
-  color: #050505;
+  color: var(--gp-bg);
 }
 .drawer-stepper-btn:disabled { opacity: 0.4; cursor: not-allowed; }
 .drawer-stepper-value {
@@ -690,7 +693,7 @@ html { scroll-behavior: smooth; }
  * thick bright-gold border, bright-gold text, strong gold halo. NOT solid
  * gold (the app's design language is gold-on-black throughout). */
 .drawer-cta-primary {
-  background: #050505;
+  background: var(--gp-text);
   color: var(--gp-gold-bright);
   border: 2px solid var(--gp-gold);
   box-shadow: 0 4px 14px rgba(0, 0, 0, 0.55),
@@ -698,7 +701,7 @@ html { scroll-behavior: smooth; }
               inset 0 0 0 1px rgba(212, 175, 55, 0.4);
 }
 .drawer-cta-primary:hover:not(:disabled) {
-  background: #0c0c0c;
+  background: var(--gp-surface);
   border-color: var(--gp-gold-bright);
   box-shadow: 0 6px 18px rgba(0, 0, 0, 0.6),
               0 0 32px rgba(212, 175, 55, 0.42),
@@ -708,14 +711,14 @@ html { scroll-behavior: smooth; }
 /* SECONDARY — clearly a button: surface fill + thick gold border + bright
  * gold text. Tuxedo treatment. */
 .drawer-cta-secondary {
-  background: #1c1c1c;
+  background: var(--gp-surface-alt);
   color: var(--gp-gold-bright);
   border: 2px solid var(--gp-gold);
   box-shadow: 0 3px 10px rgba(0, 0, 0, 0.45),
               inset 0 0 0 1px rgba(212, 175, 55, 0.18);
 }
 .drawer-cta-secondary:hover:not(:disabled) {
-  background: #262626;
+  background: var(--gp-surface-3);
   border-color: var(--gp-gold-bright);
   box-shadow: 0 4px 14px rgba(0, 0, 0, 0.55),
               0 0 22px rgba(212, 175, 55, 0.28),
@@ -725,13 +728,13 @@ html { scroll-behavior: smooth; }
 /* TERTIARY — solid fill + visible soft border + cream text. Still reads as
  * a button card, just quietest of the three. */
 .drawer-cta-tertiary {
-  background: #0a0a0a;
+  background: var(--gp-surface-alt);
   color: var(--gp-cream);
-  border: 1.5px solid #3a3a3a;
+  border: 1.5px solid var(--gp-border);
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
 }
 .drawer-cta-tertiary:hover:not(:disabled) {
-  background: #161616;
+  background: var(--gp-surface);
   border-color: var(--gp-gold-deep);
   color: var(--gp-gold-bright);
 }
@@ -760,7 +763,7 @@ html { scroll-behavior: smooth; }
   width: 52px;
   height: 52px;
   border-radius: 50%;
-  background: #050505;
+  background: var(--gp-text);
   color: var(--gp-gold-bright);
   border: 1.5px solid var(--gp-gold);
   display: inline-flex;
@@ -797,8 +800,8 @@ html { scroll-behavior: smooth; }
   align-items: center;
   justify-content: center;
   background: var(--gp-gold-bright);
-  color: #050505;
-  border: 2px solid #050505;
+  color: var(--gp-bg);
+  border: 2px solid var(--gp-text);
   border-radius: 12px;
   font-family: var(--gp-font-display);
   font-size: 14px;
@@ -880,7 +883,7 @@ html { scroll-behavior: smooth; }
   height: 64px;
   border-radius: var(--gp-r-sm);
   object-fit: cover;
-  background: #f4efe4;
+  background: var(--gp-cream);
   border: 1px solid var(--gp-gold-deep);
 }
 .cart-line-img-empty {
@@ -971,7 +974,7 @@ html { scroll-behavior: smooth; }
   height: auto;
   object-fit: contain;
   border-radius: var(--gp-r-md);
-  background: #f4efe4;
+  background: var(--gp-cream);
   box-shadow: 0 30px 80px rgba(0, 0, 0, 0.7),
               0 0 0 1px var(--gp-gold-deep);
   cursor: default;
@@ -1191,7 +1194,7 @@ html { scroll-behavior: smooth; }
   align-items: center;
   justify-content: center;
   gap: var(--gp-sm);
-  background: #050505;
+  background: var(--gp-text);
   color: var(--gp-gold-bright);
   border: 1.5px solid var(--gp-gold);
   font-weight: 800;
@@ -1211,7 +1214,7 @@ html { scroll-behavior: smooth; }
  * border + text glow. The earlier invert-to-solid-gold flash read as
  * yellow/mustard and broke the luxury vibe. */
 .buy:hover {
-  background: #0c0c0c;
+  background: var(--gp-surface);
   border-color: var(--gp-gold-bright);
   color: var(--gp-gold-bright);
   box-shadow:
@@ -1219,7 +1222,7 @@ html { scroll-behavior: smooth; }
     0 0 24px rgba(212, 175, 55, 0.2);
 }
 .buy:active {
-  background: #0a0a0a;
+  background: var(--gp-surface-alt);
   transform: scale(0.99);
 }
 .buy.compact {
@@ -1537,7 +1540,7 @@ html { scroll-behavior: smooth; }
   letter-spacing: 1.2px;
   text-transform: uppercase;
   border-radius: var(--gp-r-sm);
-  background: #050505;
+  background: var(--gp-text);
   color: var(--gp-gold-bright);
   border: 1.5px solid var(--gp-gold);
   text-decoration: none;
@@ -1551,7 +1554,7 @@ html { scroll-behavior: smooth; }
   transition: background-color 150ms ease, color 150ms ease;
 }
 .compare-buy:hover {
-  background: #0c0c0c;
+  background: var(--gp-surface);
   border-color: var(--gp-gold-bright);
   color: var(--gp-gold-bright);
   box-shadow: inset 0 0 0 1px var(--gp-gold-bright);
@@ -1770,7 +1773,7 @@ html { scroll-behavior: smooth; }
 .error-card button.primary {
   background: linear-gradient(180deg, var(--gp-gold-bright), var(--gp-gold), var(--gp-gold-dark));
   border-color: var(--gp-gold);
-  color: #1a1308;
+  color: var(--gp-text);
 }
 
 .inline-warn {
@@ -1889,7 +1892,7 @@ html { scroll-behavior: smooth; }
   align-items: center;
   justify-content: center;
   gap: var(--gp-sm);
-  background: #050505;
+  background: var(--gp-text);
   color: var(--gp-gold-bright);
   border: 1.5px solid var(--gp-gold);
   font-weight: 800;
@@ -1905,14 +1908,14 @@ html { scroll-behavior: smooth; }
     0 2px 10px rgba(0, 0, 0, 0.5);
 }
 .apply:hover {
-  background: #0c0c0c;
+  background: var(--gp-surface);
   border-color: var(--gp-gold-bright);
   color: var(--gp-gold-bright);
   box-shadow:
     inset 0 0 0 1px var(--gp-gold-bright),
     0 0 24px rgba(212, 175, 55, 0.2);
 }
-.apply:active { background: #0a0a0a; transform: scale(0.99); }
+.apply:active { background: var(--gp-surface-alt); transform: scale(0.99); }
 .preset-row {
   display: flex;
   flex-wrap: wrap;
@@ -1972,7 +1975,7 @@ html { scroll-behavior: smooth; }
 }
 .band:hover { color: var(--gp-cream); border-color: var(--gp-gold-deep); }
 .band.active {
-  background: #050505;
+  background: var(--gp-text);
   border-color: var(--gp-gold);
   color: var(--gp-gold-bright);
   box-shadow:
@@ -2015,7 +2018,7 @@ html { scroll-behavior: smooth; }
  * text. Matches the Buy button style so the page reads consistently
  * instead of the previous flat-yellow billboard. */
 .toggle.active {
-  background: #050505;
+  background: var(--gp-text);
   border-color: var(--gp-gold);
   color: var(--gp-gold-bright);
   box-shadow:
@@ -2186,7 +2189,7 @@ html { scroll-behavior: smooth; }
   align-items: center;
   justify-content: center;
   gap: var(--gp-sm);
-  background: #050505;
+  background: var(--gp-text);
   border: 1.5px solid var(--gp-gold);
   border-radius: var(--gp-r-md);
   color: var(--gp-gold-bright);
@@ -2205,7 +2208,7 @@ html { scroll-behavior: smooth; }
   transition: background-color 150ms ease, color 150ms ease, border-color 150ms ease, box-shadow 150ms ease;
 }
 .shop-all:hover {
-  background: #0c0c0c;
+  background: var(--gp-surface);
   border-color: var(--gp-gold-bright);
   box-shadow:
     inset 0 0 0 1px var(--gp-gold-bright),
@@ -2243,7 +2246,7 @@ html { scroll-behavior: smooth; }
   height: 96px;
   border-radius: var(--gp-r-sm);
   object-fit: cover;
-  background: #f4efe4;
+  background: var(--gp-cream);
   border: 1px solid var(--gp-border);
   flex-shrink: 0;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
@@ -2414,7 +2417,7 @@ body.gp-standalone {
 }
 .time-block-now {
   background: var(--gp-gold);
-  color: #050505;
+  color: var(--gp-bg);
   font-size: 10px;
   font-weight: 900;
   text-transform: uppercase;
@@ -2555,7 +2558,7 @@ body.gp-standalone {
   justify-content: center;
   gap: 4px;
   padding: 6px 4px;
-  background: #050505;
+  background: var(--gp-text);
   color: var(--gp-gold-bright);
   border: 1px solid var(--gp-gold);
   border-radius: var(--gp-r-sm);
@@ -2568,7 +2571,7 @@ body.gp-standalone {
   min-height: 30px;
 }
 .mini-card-buy:hover {
-  background: #0c0c0c;
+  background: var(--gp-surface);
   border-color: var(--gp-gold-bright);
   color: var(--gp-gold-bright);
   box-shadow: inset 0 0 0 1px var(--gp-gold-bright);
@@ -2598,7 +2601,7 @@ body.gp-standalone {
   height: 22px;
   border-radius: 50%;
   background: var(--gp-gold);
-  border: 2px solid #050505;
+  border: 2px solid var(--gp-text);
   cursor: pointer;
   box-shadow: 0 0 12px rgba(212, 175, 55, 0.4);
 }
@@ -2607,7 +2610,7 @@ body.gp-standalone {
   height: 22px;
   border-radius: 50%;
   background: var(--gp-gold);
-  border: 2px solid #050505;
+  border: 2px solid var(--gp-text);
   cursor: pointer;
 }
 .gp-slider:focus-visible {
@@ -2966,7 +2969,7 @@ body.gp-standalone {
   justify-content: center;
   gap: var(--gp-sm);
   width: 100%;
-  background: #050505;
+  background: var(--gp-text);
   color: var(--gp-gold-bright);
   border: 1.5px solid var(--gp-gold);
   font-weight: 800;
@@ -2979,7 +2982,7 @@ body.gp-standalone {
   transition: background-color 150ms ease, color 150ms ease, box-shadow 150ms ease;
 }
 .detect-btn:hover:not(:disabled) {
-  background: #0c0c0c;
+  background: var(--gp-surface);
   border-color: var(--gp-gold-bright);
   box-shadow: inset 0 0 0 1px var(--gp-gold-bright), 0 0 24px rgba(212, 175, 55, 0.2);
 }
@@ -3043,7 +3046,7 @@ body.gp-standalone {
 }
 .stepper-btn:hover {
   background: var(--gp-gold);
-  color: #050505;
+  color: var(--gp-bg);
 }
 .stepper-btn:active {
   background: var(--gp-gold-dark);
@@ -3194,7 +3197,7 @@ body.gp-standalone {
   height: 48px;
   border-radius: var(--gp-r-sm);
   object-fit: cover;
-  background: #f4efe4;
+  background: var(--gp-cream);
   border: 1px solid var(--gp-gold-deep);
   flex-shrink: 0;
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.5);
@@ -3304,7 +3307,7 @@ body.gp-standalone {
   top: 8px;
   left: 8px;
   background: var(--gp-gold);
-  color: #050505;
+  color: var(--gp-bg);
   font-size: 9px;
   font-weight: 900;
   letter-spacing: 1.4px;
@@ -3316,7 +3319,7 @@ body.gp-standalone {
   width: 100%;
   aspect-ratio: 1 / 1;
   object-fit: cover;
-  background: #f4efe4;
+  background: var(--gp-cream);
   display: block;
 }
 .synergy-card-body {
