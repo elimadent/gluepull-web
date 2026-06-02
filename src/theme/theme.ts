@@ -1,33 +1,40 @@
-/** Rugged dark theme tuned for high contrast and dirty-handed readability. */
+/**
+ * Tequila Sugar Skull light theme.
+ *
+ * Día de los Muertos × tequila palette: agave green, marigold orange,
+ * tequila gold on a warm paper-white background. Sans typography aligns
+ * with ansonpdr.com. Rainbow temperature cue preserved (hot=red, cold=blue).
+ *
+ * Tune `accent` to the exact Anson brand orange once shared.
+ */
 export const colors = {
-  bg: '#0E0F12',
-  surface: '#181A1F',
-  surfaceAlt: '#202329',
-  border: '#2C3038',
-  text: '#F5F7FA',
-  textMuted: '#9AA3B2',
-  textFaint: '#6B7280',
+  bg: '#FFFFFF',
+  surface: '#FAF6EE',
+  surfaceAlt: '#F1EADC',
+  border: '#D9D0BD',
+  text: '#14110D',
+  textMuted: '#5A5247',
+  textFaint: '#8A8378',
 
-  // Brand / accents
-  accent: '#FF7A1A', // hi-vis safety orange
-  accentDark: '#C75B0E',
+  accent: '#F26522',
+  accentDark: '#C44E13',
 
-  // Ranking medals
-  gold: '#FFC53D',
-  silver: '#C7CCD4',
-  bronze: '#D88A4A',
+  agave: '#2EA85C',
+  marigold: '#F5B82E',
 
-  // Status
-  good: '#3DD66F',
-  warn: '#FFB020',
-  bad: '#FF4D4D',
+  gold: '#F5B82E',
+  silver: '#B8B0A0',
+  bronze: '#C26C2A',
 
-  // Temperature band cues
-  hot: '#FF4D2E',
-  warm: '#FF9F1C',
-  moderate: '#FFD23F',
-  cool: '#3DB1FF',
-  cold: '#5A7BFF',
+  good: '#2EA85C',
+  warn: '#F26522',
+  bad: '#E0383E',
+
+  hot: '#E0383E',
+  warm: '#F26522',
+  moderate: '#F5B82E',
+  cool: '#2EA85C',
+  cold: '#2563D8',
 } as const;
 
 export const spacing = {
