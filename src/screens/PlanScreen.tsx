@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { BuyButton } from '@/components/BuyButton';
+import { AddToCartButton } from '@/components/AddToCartButton';
 import { GlueStickPlaceholder } from '@/components/GlueStickPlaceholder';
 import { ProductImageLightbox } from '@/components/ProductImageLightbox';
 import { Screen } from '@/components/Screen';
@@ -62,7 +62,17 @@ function PlanRow({ glue, days, totalDays }: { glue: Glue; days: number; totalDay
         </p>
         <p className="plan-card-meta">{gunTempCompact(glue.gunTemp)}</p>
         {matched ? (
-          <BuyButton url={product.productUrl} label="Buy on Anson" compact />
+          <AddToCartButton
+            className="buy compact"
+            label="Buy on Anson"
+            product={{
+              glueId: glue.id,
+              name: displayName,
+              imageUrl,
+              description: product.description ?? undefined,
+              productUrl: product.productUrl,
+            }}
+          />
         ) : (
           <span className="not-linked">Not listed</span>
         )}

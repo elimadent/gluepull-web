@@ -20,8 +20,13 @@
   box-sizing: border-box;
 }
 
-.app {
-  /* color tokens — Tequila Sugar Skull (light theme) */
+:root {
+  /* color tokens — Tequila Sugar Skull (light theme).
+   * Defined on :root (not .app) so React portals — the product drawer, the
+   * cart drawer, the image lightbox — which mount to <body> OUTSIDE the .app
+   * subtree still resolve every var(--gp-*). Scoping these to .app was why
+   * the portaled cart drawer rendered unthemed (dark scrim showing through a
+   * transparent panel) no matter how the .drawer-* rules were edited. */
   --gp-bg: #FFFFFF;              /* paper white */
   --gp-surface: #FAF6EE;         /* warm parchment */
   --gp-surface-alt: #F1EADC;     /* light agave tan */
@@ -91,7 +96,9 @@
     'Helvetica Neue', sans-serif;
   --gp-font-display: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
     'Helvetica Neue', sans-serif;
+}
 
+.app {
   font-family: var(--gp-font-body);
   font-size: var(--gp-fs-md);
   line-height: 1.5;
@@ -1189,41 +1196,48 @@ html { scroll-behavior: smooth; }
  * tequila-gold background with dark, high-contrast text. Every buy button
  * site-wide (.buy, .compare-buy, .mini-card-buy, .drawer-cta-primary,
  * .shop-all) shares this fill so the call-to-action reads consistently. */
+/* Buy button — refined, integrated treatment (Sugar Skull light skin): cream
+ * surface, thin gold outline, dark body-color label + small dark cart glyph.
+ * Visual weight sits near the spec/label pills, NOT a loud filled block. The
+ * one deliberately-filled commerce button on the site is the cart drawer's
+ * CHECKOUT ON ANSON (.drawer-cta-primary) — the conversion CTA. */
 .buy {
   margin-top: var(--gp-lg);
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: var(--gp-sm);
-  background: var(--gp-gold);
+  background: var(--gp-surface);
   color: var(--gp-text);
-  border: 1.5px solid var(--gp-gold-dark);
-  font-weight: 800;
-  font-size: var(--gp-fs-md);
-  letter-spacing: 1.5px;
+  border: 1.5px solid var(--gp-gold);
+  font-weight: 700;
+  font-size: var(--gp-fs-sm);
+  letter-spacing: 0.8px;
   text-transform: uppercase;
-  min-height: var(--gp-touch);
+  min-height: 44px;
   width: 100%;
   border-radius: var(--gp-r-md);
   text-decoration: none;
-  transition: background-color 150ms ease, color 150ms ease, transform 80ms ease;
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.35),
-    0 2px 10px rgba(20, 17, 13, 0.12);
+  transition: background-color 150ms ease, border-color 150ms ease, color 150ms ease, transform 80ms ease;
 }
-/* Hover/active — brighten the gold fill, keep the dark text. */
 .buy:hover {
-  background: var(--gp-gold-bright);
-  border-color: var(--gp-gold);
+  background: var(--gp-surface-alt);
+  border-color: var(--gp-gold-dark);
   color: var(--gp-text);
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.45),
-    0 4px 16px rgba(20, 17, 13, 0.16);
 }
 .buy:active {
-  background: var(--gp-gold-dark);
+  background: var(--gp-surface-3);
   transform: scale(0.99);
 }
+.buy:disabled { cursor: progress; opacity: 0.65; }
+/* Brief success state after Add-to-cart (label flips to "✓ Added"). */
+.buy.added {
+  border-color: var(--gp-good);
+  color: var(--gp-good);
+  background: var(--gp-surface);
+}
+/* Small dark cart glyph that inherits the button's text color. */
+.buy-ico { width: 15px; height: 15px; flex-shrink: 0; }
 .buy.compact {
   min-height: 38px;
   width: auto;
@@ -1530,6 +1544,12 @@ html { scroll-behavior: smooth; }
   overflow: hidden;
   text-overflow: ellipsis;
 }
+/* Wrapper pins the buy control to the card bottom (it took over the
+ * margin-top:auto role from .compare-buy when added for click isolation). */
+.compare-buy-wrap {
+  width: 100%;
+  margin-top: auto;
+}
 .compare-buy {
   width: 100%;
   padding: 8px 6px;
@@ -1539,9 +1559,9 @@ html { scroll-behavior: smooth; }
   letter-spacing: 1.2px;
   text-transform: uppercase;
   border-radius: var(--gp-r-sm);
-  background: var(--gp-gold);
+  background: var(--gp-surface);
   color: var(--gp-text);
-  border: 1.5px solid var(--gp-gold-dark);
+  border: 1.5px solid var(--gp-gold);
   text-decoration: none;
   text-align: center;
   margin-top: auto;
@@ -1550,14 +1570,15 @@ html { scroll-behavior: smooth; }
   align-items: center;
   justify-content: center;
   gap: 4px;
-  transition: background-color 150ms ease, color 150ms ease;
+  transition: background-color 150ms ease, border-color 150ms ease, color 150ms ease;
 }
 .compare-buy:hover {
-  background: var(--gp-gold-bright);
-  border-color: var(--gp-gold);
+  background: var(--gp-surface-alt);
+  border-color: var(--gp-gold-dark);
   color: var(--gp-text);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.4);
 }
+.compare-buy:disabled { cursor: progress; opacity: 0.65; }
+.compare-buy.added { border-color: var(--gp-good); color: var(--gp-good); }
 .compare-buy.disabled {
   background: transparent;
   color: var(--gp-text-faint);
@@ -2195,30 +2216,24 @@ html { scroll-behavior: smooth; }
   align-items: center;
   justify-content: center;
   gap: var(--gp-sm);
-  background: var(--gp-gold);
-  border: 1.5px solid var(--gp-gold-dark);
+  background: var(--gp-surface);
+  border: 1.5px solid var(--gp-gold);
   border-radius: var(--gp-r-md);
   color: var(--gp-text);
-  font-weight: 800;
-  font-size: var(--gp-fs-md);
-  letter-spacing: 1.5px;
+  font-weight: 700;
+  font-size: var(--gp-fs-sm);
+  letter-spacing: 0.8px;
   text-transform: uppercase;
   padding: var(--gp-lg);
   width: 100%;
   margin-top: var(--gp-lg);
   text-decoration: none;
   min-height: var(--gp-touch);
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.35),
-    0 2px 10px rgba(20, 17, 13, 0.12);
-  transition: background-color 150ms ease, color 150ms ease, border-color 150ms ease, box-shadow 150ms ease;
+  transition: background-color 150ms ease, color 150ms ease, border-color 150ms ease;
 }
 .shop-all:hover {
-  background: var(--gp-gold-bright);
-  border-color: var(--gp-gold);
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.45),
-    0 4px 16px rgba(20, 17, 13, 0.16);
+  background: var(--gp-surface-alt);
+  border-color: var(--gp-gold-dark);
 }
 
 /* Tips — editorial layout: real product photo + magazine-style typography. */
@@ -2381,6 +2396,9 @@ body.gp-standalone {
   /* Warm parchment surround so the centered app column blends into the page
    * on desktop and the safe-area gutters stay light on mobile (no black). */
   background: #FAF6EE;
+  /* Standalone only (not the Shopify widget): light UA scheme for the whole
+   * page incl. body-mounted portals, so native controls never get dark fill. */
+  color-scheme: light;
 }
 
 /* Time-block sections — one per Morning/Midday/Afternoon/Evening, each with
@@ -2566,12 +2584,12 @@ body.gp-standalone {
   justify-content: center;
   gap: 4px;
   padding: 6px 4px;
-  background: var(--gp-gold);
+  background: var(--gp-surface);
   color: var(--gp-text);
-  border: 1px solid var(--gp-gold-dark);
+  border: 1px solid var(--gp-gold);
   border-radius: var(--gp-r-sm);
   font-size: 10px;
-  font-weight: 800;
+  font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 1px;
   text-decoration: none;
@@ -2579,11 +2597,12 @@ body.gp-standalone {
   min-height: 30px;
 }
 .mini-card-buy:hover {
-  background: var(--gp-gold-bright);
-  border-color: var(--gp-gold);
+  background: var(--gp-surface-alt);
+  border-color: var(--gp-gold-dark);
   color: var(--gp-text);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.4);
 }
+.mini-card-buy:disabled { cursor: progress; opacity: 0.65; }
+.mini-card-buy.added { border-color: var(--gp-good); color: var(--gp-good); }
 .mini-card-buy.disabled {
   background: transparent;
   color: var(--gp-text-faint);

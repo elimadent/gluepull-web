@@ -1,9 +1,9 @@
 import { useState } from 'react';
+import { AddToCartButton } from '@/components/AddToCartButton';
 import { GlueStickPlaceholder } from '@/components/GlueStickPlaceholder';
 import { ProductImageLightbox } from '@/components/ProductImageLightbox';
 import { getAnsonProduct } from '@/data/products';
 import { panelTempRange } from '@/utils/gunTemp';
-import { linkTarget } from '@/utils/link';
 import { GlueScore } from '@/types';
 
 interface ComparisonGridProps {
@@ -82,23 +82,29 @@ export function ComparisonGrid({ picks }: ComparisonGridProps) {
                   Panel {panelTempRange(p.glue).range}
                 </div>
               </div>
-              {matched ? (
-                <a
-                  className="compare-buy"
-                  href={product.productUrl}
-                  target={linkTarget(product.productUrl)}
-                  rel="noopener noreferrer"
-                  aria-label={`Buy ${displayName} on Anson PDR`}
-                  onClick={(e) => e.stopPropagation()}
-                >
-                  <span aria-hidden>🛒</span>
-                  <span>Buy</span>
-                </a>
-              ) : (
-                <span className="compare-buy disabled" aria-disabled="true">
-                  Not listed
-                </span>
-              )}
+              {/* Stop the card's jump-to-breakdown click when tapping Buy. */}
+              <div
+                className="compare-buy-wrap"
+                onClick={(e) => e.stopPropagation()}
+              >
+                {matched ? (
+                  <AddToCartButton
+                    className="compare-buy"
+                    label="Buy"
+                    product={{
+                      glueId: p.glue.id,
+                      name: displayName,
+                      imageUrl,
+                      description: product.description ?? undefined,
+                      productUrl: product.productUrl,
+                    }}
+                  />
+                ) : (
+                  <span className="compare-buy disabled" aria-disabled="true">
+                    Not listed
+                  </span>
+                )}
+              </div>
             </div>
           );
         })}
