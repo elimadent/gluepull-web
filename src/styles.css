@@ -2177,10 +2177,11 @@ html { scroll-behavior: smooth; }
   justify-content: center;
   min-width: 44px;
   padding: 4px 8px;
-  background: rgba(5, 5, 5, 0.85);
-  border: 1px solid var(--gp-gold);
+  /* Gold chip with dark text (was a black square), matching the cart + arrows. */
+  background: var(--gp-gold);
+  border: 1px solid var(--gp-gold-dark);
   border-radius: var(--gp-r-sm);
-  color: var(--gp-gold-bright);
+  color: var(--gp-text);
   font-family: var(--gp-font-display);
   line-height: 1;
 }
