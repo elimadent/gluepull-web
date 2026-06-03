@@ -37,6 +37,15 @@ const CANDIDATE_HANDLES = [
 const STORAGE_KEY = 'glueiq.bestsellers.v1';
 const TTL_MS = 12 * 60 * 60 * 1000; // 12h — popularity drifts slowly.
 
+/**
+ * Anson Storefront API public access token. Storefront tokens are read-only
+ * and designed by Shopify to ship in client-side JS (headless storefronts) —
+ * unlike Admin tokens, which must never be exposed. Override at build time
+ * with VITE_SHOPIFY_STOREFRONT_TOKEN or at runtime via window.GLUEIQ_SHOPIFY_TOKEN.
+ */
+const DEFAULT_STOREFRONT_TOKEN = 'a86afc78c42fb73db52b72769b54ce12';
+const STOREFRONT_API_VERSION = '2024-04';
+
 interface CachedBestSellers {
   handles: string[];
   ts: number;
@@ -44,8 +53,53 @@ interface CachedBestSellers {
 
 let inflight: Promise<string[]> | null = null;
 
+function storefrontToken(): string | undefined {
+  const fromEnv =
+    typeof import.meta !== 'undefined'
+      ? (import.meta as ImportMeta & { env?: Record<string, string> }).env
+          ?.VITE_SHOPIFY_STOREFRONT_TOKEN
+      : undefined;
+  const fromWindow =
+    typeof window !== 'undefined' ? window.GLUEIQ_SHOPIFY_TOKEN : undefined;
+  return fromEnv || fromWindow || DEFAULT_STOREFRONT_TOKEN;
+}
+
 function collectionUrl(handle: string): string {
   return `https://ansonpdr.com/collections/${handle}/products.json?limit=250`;
+}
+
+/**
+ * Authoritative path: ask the Storefront API for products sorted by
+ * BEST_SELLING (store-wide). Returns handles in best-selling order.
+ */
+async function fetchBestSellingViaStorefront(): Promise<string[]> {
+  const token = storefrontToken();
+  if (!token) return [];
+  const query =
+    '{ products(first: 100, sortKey: BEST_SELLING) { edges { node { handle } } } }';
+  try {
+    const res = await fetch(
+      `https://ansonpdr.com/api/${STOREFRONT_API_VERSION}/graphql.json`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Accept: 'application/json',
+          'X-Shopify-Storefront-Access-Token': token,
+        },
+        body: JSON.stringify({ query }),
+      }
+    );
+    if (!res.ok) return [];
+    const json = (await res.json()) as {
+      data?: { products?: { edges?: Array<{ node?: { handle?: string } }> } };
+    };
+    return (json.data?.products?.edges ?? [])
+      .map((e) => e.node?.handle)
+      .filter((h): h is string => typeof h === 'string' && h.length > 0);
+  } catch {
+    return [];
+  }
 }
 
 function readCache(): CachedBestSellers | null {
@@ -108,16 +162,19 @@ export async function getBestSellerHandles(): Promise<string[]> {
   if (cached && Date.now() - cached.ts < TTL_MS) return cached.handles;
   if (inflight) return inflight;
 
-  inflight = fetchCollectionHandles()
-    .then((handles) => {
-      if (handles.length) {
-        writeCache(handles);
-        return handles;
-      }
-      // Nothing fetched — fall back to any stale cache so a transient miss
-      // doesn't wipe a previously-good list.
-      return cached?.handles ?? [];
-    })
+  inflight = (async () => {
+    // Storefront API (BEST_SELLING) is authoritative; the named-collection
+    // probe is the fallback if no token / the API path fails.
+    let handles = await fetchBestSellingViaStorefront();
+    if (!handles.length) handles = await fetchCollectionHandles();
+    if (handles.length) {
+      writeCache(handles);
+      return handles;
+    }
+    // Nothing fetched — keep any stale cache so a transient miss doesn't wipe
+    // a previously-good list.
+    return cached?.handles ?? [];
+  })()
     .catch(() => cached?.handles ?? [])
     .finally(() => {
       inflight = null;

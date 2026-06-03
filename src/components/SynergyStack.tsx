@@ -1,23 +1,55 @@
-import { useRef } from 'react';
+import { useMemo, useRef } from 'react';
 import { AddToCartButton } from '@/components/AddToCartButton';
-import { SYNERGY_STACK, SynergyCategory } from '@/data/synergyStack';
+import { SYNERGY_STACK, SynergyCategory, SynergyProduct } from '@/data/synergyStack';
+import { useBestSellers, type RankFn } from '@/hooks/useBestSellers';
 
 /**
  * Replacement for the old "Complete Tool Kit" list. Each row is a collapsible
  * category; expanding reveals a horizontally swipeable carousel of real
  * ansonpdr.com products, each with a "why this pairs with your glue" blurb.
  *
- * The first product in each category is the lead recommendation; left/right
- * arrows and native touch swipe cycle to the alternates.
+ * The lead recommendation is the best seller in the category (per the live
+ * Anson best-sellers list); ties and non-best-sellers keep their hand-authored
+ * order. Left/right arrows and native touch swipe cycle to the alternates.
  */
 export function SynergyStack() {
+  const { rankOf } = useBestSellers();
+  const categories = useMemo(
+    () =>
+      SYNERGY_STACK.map((cat) => ({
+        ...cat,
+        products: orderByBestSeller(cat.products, rankOf),
+      })),
+    [rankOf]
+  );
   return (
     <div className="synergy-stack">
-      {SYNERGY_STACK.map((cat) => (
+      {categories.map((cat) => (
         <CategoryAccordion key={cat.id} category={cat} />
       ))}
     </div>
   );
+}
+
+/** Anson product handle from a /products/<handle> URL. */
+function handleOf(url: string): string | undefined {
+  return url.match(/\/products\/([^/?#]+)/)?.[1];
+}
+
+/** Best sellers first (by rank), everything else in its original order. */
+function orderByBestSeller(
+  products: SynergyProduct[],
+  rankOf: RankFn
+): SynergyProduct[] {
+  return products
+    .map((p, i) => ({ p, i, rank: rankOf(handleOf(p.url)) }))
+    .sort((a, b) => {
+      if (a.rank !== undefined && b.rank !== undefined) return a.rank - b.rank || a.i - b.i;
+      if (a.rank !== undefined) return -1;
+      if (b.rank !== undefined) return 1;
+      return a.i - b.i;
+    })
+    .map((x) => x.p);
 }
 
 function CategoryAccordion({ category }: { category: SynergyCategory }) {
