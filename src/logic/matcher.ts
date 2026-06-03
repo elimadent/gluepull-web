@@ -77,67 +77,94 @@ function pullerCategoryFor(glue: Glue, dent: DentGeometry): 'mini-lifter' | 'sli
 // Tool lookup
 // ============================================================================
 
-/** Pick the most-relevant tool in a category for a given filter. Falls back
- *  to "first tool of that category" so a real Anson URL always comes back. */
+/** Best-seller rank lookup: lower = better seller, undefined = not a best
+ *  seller. Supplied by the live Anson "Best Sellers" collection; absent when
+ *  that data hasn't loaded (or failed), in which case picks fall back to the
+ *  data-file order exactly as before. */
+export type RankFn = (handle: string | undefined) => number | undefined;
+
+/** From a pool of equally-valid candidates, PREFER the best seller: pick the
+ *  lowest defined rank; if none are best sellers, keep the first (the prior
+ *  rules-based winner). Relevance is already decided by the caller's filter —
+ *  this only breaks ties by popularity. */
+function chooseBest(pool: Tool[], rankOf?: RankFn): Tool {
+  if (!rankOf || pool.length <= 1) return pool[0];
+  let best = pool[0];
+  let bestRank = rankOf(best.id);
+  for (let i = 1; i < pool.length; i++) {
+    const r = rankOf(pool[i].id);
+    if (r !== undefined && (bestRank === undefined || r < bestRank)) {
+      best = pool[i];
+      bestRank = r;
+    }
+  }
+  return best;
+}
+
+/** Pick the most-relevant tool in a category for a given filter, preferring
+ *  best sellers among the matches. Falls back to "first tool of that
+ *  category" so a real Anson URL always comes back. */
 function pickTool(
   category: Tool['category'],
-  pred?: (t: Tool) => boolean
+  pred?: (t: Tool) => boolean,
+  rankOf?: RankFn
 ): Tool {
   const inCategory = tools.filter((t) => t.category === category);
-  if (pred) {
-    const filtered = inCategory.filter(pred);
-    if (filtered.length) return filtered[0];
-  }
-  return inCategory[0];
+  const filtered = pred ? inCategory.filter(pred) : inCategory;
+  return chooseBest(filtered.length ? filtered : inCategory, rankOf);
 }
 
-function pickGun(klass: GunTempClass): Tool {
-  return pickTool('glue-gun', (t) => t.gunTempClass === klass);
+function pickGun(klass: GunTempClass, rankOf?: RankFn): Tool {
+  return pickTool('glue-gun', (t) => t.gunTempClass === klass, rankOf);
 }
 
-function pickPuller(want: 'mini-lifter' | 'slide-hammer', dent: DentGeometry): Tool {
+function pickPuller(
+  want: 'mini-lifter' | 'slide-hammer',
+  dent: DentGeometry,
+  rankOf?: RankFn
+): Tool {
   if (want === 'slide-hammer') {
     if (dent === 'collision') {
-      // Heavy collision-grade slide — Pullmaster is the heavy hitter in the catalog.
-      const heavy = tools.find(
+      // Heavy collision-grade slides — Pullmaster/band-slide/storm class.
+      const heavy = tools.filter(
         (t) => t.category === 'slide-hammer' && /pullmaster|band-slide|storm/i.test(t.name)
       );
-      if (heavy) return heavy;
+      if (heavy.length) return chooseBest(heavy, rankOf);
     }
     if (dent === 'sharp-crease') {
-      const passthru = tools.find(
+      const passthru = tools.filter(
         (t) => t.category === 'slide-hammer' && /pass-through/i.test(t.name)
       );
-      if (passthru) return passthru;
+      if (passthru.length) return chooseBest(passthru, rankOf);
     }
-    return pickTool('slide-hammer');
+    return pickTool('slide-hammer', undefined, rankOf);
   }
   if (dent === 'sharp-crease') {
-    const crease = tools.find((t) => t.category === 'kit' && /crease/i.test(t.name));
-    if (crease) return crease;
+    const crease = tools.filter((t) => t.category === 'kit' && /crease/i.test(t.name));
+    if (crease.length) return chooseBest(crease, rankOf);
   }
   if (dent === 'large-soft') {
-    const plate = tools.find(
+    const plate = tools.filter(
       (t) => t.category === 'mini-lifter' && /pulling plate/i.test(t.name)
     );
-    if (plate) return plate;
+    if (plate.length) return chooseBest(plate, rankOf);
   }
-  return pickTool('mini-lifter');
+  return pickTool('mini-lifter', undefined, rankOf);
 }
 
-function pickTab(shape: TabShapeClass): Tool {
-  return pickTool('glue-tab', (t) => t.tabShape === shape);
+function pickTab(shape: TabShapeClass, rankOf?: RankFn): Tool {
+  return pickTool('glue-tab', (t) => t.tabShape === shape, rankOf);
 }
 
 /** Cactus Juice helps grip in marginal (cold/humid) conditions; the standard
- *  Glue Pull Panel Prep is the all-rounder. */
-function pickRelease(tags: AnsonWeatherTag[]): Tool {
+ *  Glue Pull Panel Prep is the all-rounder. Best seller breaks ties. */
+function pickRelease(tags: AnsonWeatherTag[], rankOf?: RankFn): Tool {
   const marginal = tags.includes('Cold') || tags.includes('Humid');
-  const cactus = tools.find(
+  const cactus = tools.filter(
     (t) => t.category === 'release-agent' && /cactus juice/i.test(t.name)
   );
-  if (marginal && cactus) return cactus;
-  return pickTool('release-agent');
+  if (marginal && cactus.length) return chooseBest(cactus, rankOf);
+  return pickTool('release-agent', undefined, rankOf);
 }
 
 // ============================================================================
@@ -171,14 +198,18 @@ function rationaleFor(glue: Glue, dent: DentGeometry, klass: GunTempClass): stri
 // Public API
 // ============================================================================
 
-export function recommendRig(glue: Glue, dent: DentGeometry = 'small-ding'): ToolRecommendation {
+export function recommendRig(
+  glue: Glue,
+  dent: DentGeometry = 'small-ding',
+  rankOf?: RankFn
+): ToolRecommendation {
   const klass = gunClassFor(glue);
   const shape = tabShapeFor(glue, dent);
   const pullerCat = pullerCategoryFor(glue, dent);
-  const gun = pickGun(klass);
-  const puller = pickPuller(pullerCat, dent);
-  const tab = pickTab(shape);
-  const release = pickRelease(glue.ansonWeatherTags);
+  const gun = pickGun(klass, rankOf);
+  const puller = pickPuller(pullerCat, dent, rankOf);
+  const tab = pickTab(shape, rankOf);
+  const release = pickRelease(glue.ansonWeatherTags, rankOf);
   return {
     glueId: glue.id,
     gun,
