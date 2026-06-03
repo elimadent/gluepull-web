@@ -2045,16 +2045,15 @@ html { scroll-behavior: smooth; }
   transition: border-color 150ms ease, color 150ms ease;
 }
 .toggle:hover { color: var(--gp-text); border-color: var(--gp-gold-deep); }
-/* Active state — tuxedo treatment: dark surface, bright gold border, gold
- * text. Matches the Buy button style so the page reads consistently
- * instead of the previous flat-yellow billboard. */
+/* Active state — gold fill with dark text, matching the cart pill, carousel
+ * arrows, and day badges. Gold = selected, parchment = unselected. */
 .toggle.active {
-  background: var(--gp-text);
-  border-color: var(--gp-gold);
-  color: var(--gp-gold-bright);
+  background: var(--gp-gold);
+  border-color: var(--gp-gold-dark);
+  color: var(--gp-text);
   box-shadow:
     inset 0 0 0 1px var(--gp-gold-bright),
-    0 0 18px rgba(212, 175, 55, 0.18);
+    0 0 18px rgba(245, 184, 46, 0.28);
 }
 /* Legacy plan-row (kept in case anything still mounts it). */
 .plan-row {
