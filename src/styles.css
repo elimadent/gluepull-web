@@ -1705,13 +1705,16 @@ html { scroll-behavior: smooth; }
 .tabbar {
   position: fixed;
   bottom: 0;
-  left: 50%;
-  transform: translateX(-50%);
+  /* Center within the max-width using left/right + margin auto rather than
+   * translateX. A fixed element combining `transform` with `backdrop-filter`
+   * is the classic trigger for iOS Safari's "floating tab bar" jitter during
+   * momentum scroll; the surface is already opaque so the blur did nothing. */
+  left: 0;
+  right: 0;
+  margin-inline: auto;
   width: 100%;
   max-width: 560px;
   background: var(--gp-surface);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
   border-top: 1px solid var(--gp-border);
   box-shadow: 0 -2px 16px rgba(20, 17, 13, 0.06);
   display: flex;
@@ -3271,7 +3274,10 @@ body.gp-standalone {
 }
 .synergy-arrow {
   position: absolute;
-  top: 50%;
+  /* Anchored to the vertical center of the square product image (the card is
+   * a fixed 280px wide, so the image is ~280px tall) — keeps the arrows off
+   * the product title that sits below the image. */
+  top: 140px;
   transform: translateY(-50%);
   width: 36px;
   height: 36px;
