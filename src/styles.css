@@ -488,6 +488,10 @@ html { scroll-behavior: smooth; }
   position: fixed;
   inset: 0;
   z-index: 9998;
+  /* Force the LIGHT UA scheme on the whole portaled subtree so the drawer
+   * never inherits iOS dark-mode rendering even if the body class is missing
+   * (belt-and-suspenders for the "cart drawer still dark" report). */
+  color-scheme: light;
   /* Heavier scrim so the tab bar / page below mute completely behind the
    * drawer — otherwise the bottom-of-screen UI bleeds through and the CTAs
    * read as floating text against the page rather than buttons on a panel. */
@@ -511,6 +515,9 @@ html { scroll-behavior: smooth; }
   max-width: 520px;
   max-height: 92vh;
   background: var(--gp-surface);
+  /* Explicit dark text base so any unstyled child stays readable on the cream
+   * panel regardless of the surrounding page color-scheme. */
+  color: var(--gp-text);
   border-top: 1px solid var(--gp-gold);
   border-left: 1px solid var(--gp-gold-deep);
   border-right: 1px solid var(--gp-gold-deep);
@@ -831,6 +838,35 @@ html { scroll-behavior: smooth; }
 @keyframes cart-pill-in {
   from { transform: scale(0.6); opacity: 0; }
   to   { transform: scale(1); opacity: 1; }
+}
+
+/* Add-to-cart confirmation toast — on-theme gold pill, dark text. Floats above
+ * the tab bar (the cart pill sits bottom-right; this centers). */
+.gp-toast {
+  position: fixed;
+  left: 50%;
+  bottom: calc(96px + env(safe-area-inset-bottom, 0px));
+  transform: translateX(-50%);
+  z-index: 9999;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 16px;
+  background: var(--gp-gold);
+  color: var(--gp-text);
+  border: 1px solid var(--gp-gold-dark);
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 0.4px;
+  box-shadow: 0 6px 18px rgba(20, 17, 13, 0.26);
+  pointer-events: none;
+  color-scheme: light;
+  animation: gp-toast-in 180ms ease-out;
+}
+@keyframes gp-toast-in {
+  from { opacity: 0; transform: translate(-50%, 8px); }
+  to   { opacity: 1; transform: translate(-50%, 0); }
 }
 
 /* ============================================================================
