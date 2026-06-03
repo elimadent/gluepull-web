@@ -4,9 +4,11 @@ import {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
   type ReactNode,
 } from 'react';
+import { createPortal } from 'react-dom';
 import { CartPanel } from '@/components/CartPanel';
 import { CartPill } from '@/components/CartPill';
 import { ProductDrawer, type DrawerProductRef } from '@/components/ProductDrawer';
@@ -142,8 +144,19 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const [open, setOpen] = useState<DrawerProductRef | null>(null);
   const [lines, setLines] = useState<CartLine[]>(loadStoredCart);
   const [cartOpen, setCartOpen] = useState(false);
+  const [toast, setToast] = useState<string | null>(null);
+  const toastTimer = useRef<number | null>(null);
 
   const urlIndex = useMemo(buildUrlIndex, []);
+
+  // Brief confirmation flash on add-to-cart (the floating pill badge updates
+  // too, but the toast makes the "it went in the in-app cart, not Anson"
+  // behavior unmistakable).
+  const showToast = useCallback((msg: string) => {
+    setToast(msg);
+    if (toastTimer.current) window.clearTimeout(toastTimer.current);
+    toastTimer.current = window.setTimeout(() => setToast(null), 1800);
+  }, []);
 
   // Persist cart on every change.
   useEffect(() => {
@@ -203,8 +216,9 @@ export function CartProvider({ children }: { children: ReactNode }) {
           },
         ];
       });
+      showToast('Added to cart');
     },
-    []
+    [showToast]
   );
 
   const setLineQty = useCallback((variantId: number, qty: number) => {
@@ -266,7 +280,22 @@ export function CartProvider({ children }: { children: ReactNode }) {
       {totalItems > 0 ? <CartPill /> : null}
       {open ? <ProductDrawer product={open} onClose={closeDrawer} /> : null}
       {cartOpen ? <CartPanel /> : null}
+      <CartToast message={toast} />
     </CartContext.Provider>
+  );
+}
+
+/** Small on-theme confirmation pill that floats above the tab bar when a
+ *  product is added to the in-app cart. Portaled to <body> so it sits above
+ *  every stacking context. */
+function CartToast({ message }: { message: string | null }) {
+  if (typeof document === 'undefined' || !message) return null;
+  return createPortal(
+    <div className="gp-toast" role="status" aria-live="polite">
+      <span aria-hidden>✓</span>
+      <span>{message}</span>
+    </div>,
+    document.body
   );
 }
 
