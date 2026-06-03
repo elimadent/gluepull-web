@@ -38,7 +38,7 @@
   --gp-hairline: rgba(20, 17, 13, 0.08);
   --gp-text: #14110D;            /* charred-agave near-black */
   --gp-text-muted: #5A5247;
-  --gp-text-faint: #8A8378;
+  --gp-text-faint: #6E665A;
 
   /* Tequila Sugar Skull palette — marigold + agave + gold */
   --gp-accent: #F26522;          /* marigold orange (primary, ~Anson brand) */
@@ -153,7 +153,7 @@
   color: inherit;
 }
 .app a {
-  color: var(--gp-gold);
+  color: var(--gp-gold-deep);
 }
 .app p {
   margin: 0;
@@ -1073,7 +1073,7 @@ html { scroll-behavior: smooth; }
   align-items: center;
   gap: 6px;
   margin-top: 6px;
-  color: var(--gp-gold);
+  color: var(--gp-gold-deep);
   font-size: var(--gp-fs-xs);
   font-weight: 700;
   text-transform: uppercase;
@@ -1184,7 +1184,7 @@ html { scroll-behavior: smooth; }
 }
 .rank.r1 {
   border-color: var(--gp-gold);
-  color: var(--gp-gold);
+  color: var(--gp-gold-deep);
   background:
     radial-gradient(circle at 30% 30%, rgba(232, 199, 104, 0.25), transparent 70%),
     var(--gp-bg);
@@ -1384,7 +1384,7 @@ html { scroll-behavior: smooth; }
   font-weight: 700;
   line-height: 1;
   letter-spacing: -0.5px;
-  color: var(--gp-gold);
+  color: var(--gp-gold-deep);
   /* Faint gold glow so it reads as metallic, not flat type. */
   text-shadow:
     0 0 1px rgba(255, 230, 160, 0.6),
@@ -1473,7 +1473,7 @@ html { scroll-behavior: smooth; }
   font-weight: 800;
   letter-spacing: 1.3px;
   text-transform: uppercase;
-  color: var(--gp-gold);
+  color: var(--gp-gold-deep);
   line-height: 1;
 }
 .rig-row:hover .rig-role,
@@ -1501,7 +1501,7 @@ html { scroll-behavior: smooth; }
 }
 .rig-chev {
   flex: 0 0 auto;
-  color: var(--gp-gold);
+  color: var(--gp-gold-deep);
   font-size: 18px;
   font-weight: 700;
   line-height: 1;
@@ -1663,7 +1663,7 @@ html { scroll-behavior: smooth; }
   text-transform: uppercase;
   letter-spacing: 1.2px;
 }
-.timeline.active .block-label { color: var(--gp-gold); }
+.timeline.active .block-label { color: var(--gp-gold-deep); }
 .timeline .block-temp {
   font-family: var(--gp-font-display);
   font-size: var(--gp-fs-lg);
@@ -1893,7 +1893,7 @@ html { scroll-behavior: smooth; }
   font-weight: 500;
 }
 .input-row .unit {
-  color: var(--gp-gold);
+  color: var(--gp-gold-deep);
   font-weight: 700;
   font-size: var(--gp-fs-sm);
   letter-spacing: 0.5px;
@@ -2191,7 +2191,7 @@ html { scroll-behavior: smooth; }
   letter-spacing: 1.1px;
   text-transform: uppercase;
   margin-top: 2px;
-  color: var(--gp-gold);
+  color: var(--gp-gold-deep);
 }
 .plan-card-meta {
   font-size: 11px;
@@ -2298,7 +2298,7 @@ html { scroll-behavior: smooth; }
   font-weight: 800;
   text-transform: uppercase;
   letter-spacing: 2px;
-  color: var(--gp-gold);
+  color: var(--gp-gold-deep);
 }
 .tip-title-editorial {
   font-family: var(--gp-font-display);
@@ -2337,7 +2337,7 @@ html { scroll-behavior: smooth; }
   font-family: var(--gp-font-display);
   font-size: 22px;
   font-weight: 700;
-  color: var(--gp-gold);
+  color: var(--gp-gold-deep);
   line-height: 1;
   text-align: right;
 }
@@ -2432,7 +2432,7 @@ body.gp-standalone {
   letter-spacing: 0.5px;
 }
 .time-block.active .time-block-title {
-  color: var(--gp-gold);
+  color: var(--gp-gold-deep);
 }
 .time-block-conds {
   color: var(--gp-text-muted);
@@ -2674,7 +2674,7 @@ body.gp-standalone {
   font-weight: 800;
   letter-spacing: 2px;
   text-transform: uppercase;
-  color: var(--gp-gold);
+  color: var(--gp-gold-deep);
   margin-right: var(--gp-sm);
 }
 .collapsible-title {
@@ -2748,7 +2748,7 @@ body.gp-standalone {
 }
 .scene-vals {
   margin-top: 4px;
-  color: var(--gp-gold);
+  color: var(--gp-gold-deep);
   font-family: var(--gp-font-display);
   font-size: 15px;
   font-weight: 700;
@@ -2861,7 +2861,7 @@ body.gp-standalone {
   font-weight: 800;
   letter-spacing: 1.8px;
   text-transform: uppercase;
-  color: var(--gp-gold);
+  color: var(--gp-gold-deep);
   padding-bottom: 6px;
   margin-bottom: var(--gp-sm);
   border-bottom: 1px solid var(--gp-border-soft);
@@ -2962,7 +2962,7 @@ body.gp-standalone {
   font-weight: 800;
   letter-spacing: 1.6px;
   text-transform: uppercase;
-  color: var(--gp-gold);
+  color: var(--gp-gold-deep);
   margin-bottom: var(--gp-sm);
 }
 .best-for-list {
@@ -3041,7 +3041,7 @@ body.gp-standalone {
   font-family: var(--gp-font-display);
   font-size: var(--gp-fs-xl);
   font-weight: 700;
-  color: var(--gp-gold);
+  color: var(--gp-gold-deep);
   letter-spacing: 0.2px;
   line-height: 1;
 }
@@ -3249,7 +3249,7 @@ body.gp-standalone {
   line-height: 1.35;
 }
 .synergy-lead {
-  color: var(--gp-gold);
+  color: var(--gp-gold-deep);
   font-size: 11px;
   font-weight: 700;
   letter-spacing: 0.4px;
@@ -3382,7 +3382,7 @@ body.gp-standalone {
   font-weight: 800;
   letter-spacing: 1.4px;
   text-transform: uppercase;
-  color: var(--gp-gold);
+  color: var(--gp-gold-deep);
 }
 .synergy-card .buy {
   margin-top: 0;
@@ -3427,7 +3427,7 @@ body.gp-standalone {
   font-weight: 800;
   letter-spacing: 2px;
   text-transform: uppercase;
-  color: var(--gp-gold);
+  color: var(--gp-gold-deep);
 }
 .about-headline {
   font-family: var(--gp-font-display);
@@ -3475,7 +3475,7 @@ body.gp-standalone {
   font-weight: 800;
   letter-spacing: 2px;
   text-transform: uppercase;
-  color: var(--gp-gold);
+  color: var(--gp-gold-deep);
 }
 .about-card .collapsible-title {
   font-family: var(--gp-font-display);
@@ -3547,7 +3547,7 @@ body.gp-standalone {
   position: absolute;
   left: 8px;
   top: -2px;
-  color: var(--gp-gold);
+  color: var(--gp-gold-deep);
   font-size: 22px;
   font-weight: 900;
   line-height: 1;
