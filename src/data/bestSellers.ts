@@ -1,17 +1,16 @@
 /*
- * Curated best-seller fallback.
+ * Editorial best-seller PINS.
  *
- * The app prefers Anson's LIVE best sellers (Storefront API, see
- * services/bestSellers.ts). When that call can't be reached — token/CORS
- * issues, offline, or the build host's network policy — we fall back to this
- * hand-maintained, ordered list so the Paired Rig and "Dial In Your Pull"
- * carousels still lead with the products we want featured.
+ * These handles ALWAYS lead the best-seller ranking, ahead of Anson's live
+ * Storefront best sellers (which fill in the rest). That guarantees the
+ * products we want featured win the pick everywhere they're a valid candidate
+ * — the Paired Rig rows AND the "Dial In Your Pull" carousels — regardless of
+ * whether the live API is reachable or how it happens to rank things.
  *
- * Ordering = best seller first (index 0 wins ties). These are Anson product
- * handles (the slug in /products/<handle>). Edit freely; replace with Anson's
- * real best-seller order once confirmed.
+ * Ordering = highest priority first. These are Anson product handles (the slug
+ * in /products/<handle>). Edit freely.
  */
 export const CURATED_BEST_SELLERS: string[] = [
-  // Guns — Trifecta cordless leads the gun slot.
+  // Gun: always suggest the Trifecta cordless over the Surebonder/Tec guns.
   'trifecta-ryobi-makita-bosch-dewalt-cordless-glue-gun',
 ];
