@@ -1,4 +1,4 @@
-import { useMemo, useRef } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { AddToCartButton } from '@/components/AddToCartButton';
 import { SYNERGY_STACK, SynergyCategory, SynergyProduct } from '@/data/synergyStack';
 import { useBestSellers, type RankFn } from '@/hooks/useBestSellers';
@@ -85,28 +85,61 @@ function CategoryAccordion({ category }: { category: SynergyCategory }) {
 
 function ProductCarousel({ category }: { category: SynergyCategory }) {
   const scrollerRef = useRef<HTMLDivElement>(null);
+  const [atStart, setAtStart] = useState(true);
+  const [atEnd, setAtEnd] = useState(true);
 
-  const scrollBy = (direction: 'left' | 'right') => {
+  const updateEdges = useCallback(() => {
+    const el = scrollerRef.current;
+    if (!el) return;
+    const max = el.scrollWidth - el.clientWidth;
+    setAtStart(el.scrollLeft <= 1);
+    // max <= 1 means everything already fits — treat as "at the end" so the
+    // next arrow hides instead of scrolling into blank space.
+    setAtEnd(el.scrollLeft >= max - 1);
+  }, []);
+
+  // Recompute on mount and whenever the scroller resizes (e.g. when the
+  // <details> opens and the carousel goes from 0 → real width).
+  useEffect(() => {
+    const el = scrollerRef.current;
+    if (!el) return;
+    updateEdges();
+    const ro = new ResizeObserver(updateEdges);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [updateEdges]);
+
+  const scrollByCard = (direction: 'left' | 'right') => {
     const el = scrollerRef.current;
     if (!el) return;
     const cardWidth = el.querySelector<HTMLElement>('.synergy-card')?.offsetWidth ?? 280;
     const step = cardWidth + 16; // card width + gap
-    el.scrollBy({ left: direction === 'right' ? step : -step, behavior: 'smooth' });
+    const max = el.scrollWidth - el.clientWidth;
+    // Clamp so the carousel stops exactly at the first / last card.
+    const target = Math.max(
+      0,
+      Math.min(max, el.scrollLeft + (direction === 'right' ? step : -step))
+    );
+    el.scrollTo({ left: target, behavior: 'smooth' });
   };
+
+  const multiple = category.products.length > 1;
 
   return (
     <div className="synergy-carousel-wrap">
       <button
         type="button"
         className="synergy-arrow left"
-        onClick={() => scrollBy('left')}
+        onClick={() => scrollByCard('left')}
         aria-label="Previous product"
+        disabled={!multiple || atStart}
       >
         ‹
       </button>
       <div
         className="synergy-carousel"
         ref={scrollerRef}
+        onScroll={updateEdges}
         role="list"
         aria-label={`${category.label} options`}
       >
@@ -142,8 +175,9 @@ function ProductCarousel({ category }: { category: SynergyCategory }) {
       <button
         type="button"
         className="synergy-arrow right"
-        onClick={() => scrollBy('right')}
+        onClick={() => scrollByCard('right')}
         aria-label="Next product"
+        disabled={!multiple || atEnd}
       >
         ›
       </button>
