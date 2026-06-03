@@ -97,6 +97,11 @@
   line-height: 1.5;
   color: var(--gp-text);
   background: var(--gp-bg);
+  /* Light skin: render native form controls / unstyled buttons (e.g. the
+   * bottom-nav tabs) with the LIGHT user-agent scheme. Without this the
+   * page's color-scheme would let iOS Safari paint bare <button>s with a
+   * dark UA fill — that's what made the nav tabs render as dark pills. */
+  color-scheme: light;
   -webkit-font-smoothing: antialiased;
   -webkit-text-size-adjust: 100%;
   -webkit-tap-highlight-color: transparent;
@@ -1718,6 +1723,12 @@ html { scroll-behavior: smooth; }
   flex-direction: column;
   align-items: center;
   gap: 2px;
+  /* Transparent + appearance:none so the tab shows the cream bar through it
+   * rather than any user-agent button fill. */
+  background: transparent;
+  border: 0;
+  -webkit-appearance: none;
+  appearance: none;
   color: var(--gp-text-muted);
   font-size: 9.5px;
   font-weight: 700;
@@ -2367,7 +2378,9 @@ html { scroll-behavior: smooth; }
 html.gp-standalone,
 body.gp-standalone {
   margin: 0;
-  background: #000;
+  /* Warm parchment surround so the centered app column blends into the page
+   * on desktop and the safe-area gutters stay light on mobile (no black). */
+  background: #FAF6EE;
 }
 
 /* Time-block sections — one per Morning/Midday/Afternoon/Evening, each with
