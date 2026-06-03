@@ -195,7 +195,7 @@
   background: transparent;
   border: 1px solid var(--gp-gold-deep);
   border-radius: var(--gp-r-md);
-  color: var(--gp-gold-bright);
+  color: var(--gp-gold-dark);
   font-size: var(--gp-fs-xs);
   font-weight: 700;
   text-transform: uppercase;
@@ -226,7 +226,7 @@
   font-size: var(--gp-fs-lg);
   font-weight: 600;
   letter-spacing: 0.4px;
-  color: var(--gp-cream);
+  color: var(--gp-text);
   position: relative;
   padding-bottom: var(--gp-sm);
 }
@@ -280,7 +280,7 @@
   font-weight: 600;
   letter-spacing: 0.4px;
   margin-top: var(--gp-md);
-  color: var(--gp-cream);
+  color: var(--gp-text);
 }
 .welcome-copy {
   color: var(--gp-text-muted);
@@ -341,7 +341,7 @@
 }
 .cta.secondary {
   background: transparent;
-  color: var(--gp-cream);
+  color: var(--gp-text);
   border: 1px solid var(--gp-gold-deep);
 }
 .cta.secondary:hover {
@@ -531,16 +531,16 @@ html { scroll-behavior: smooth; }
   width: 36px;
   height: 36px;
   border-radius: 50%;
-  background: rgba(5, 5, 5, 0.7);
-  border: 1px solid var(--gp-gold-deep);
-  color: var(--gp-gold-bright);
-  font-size: 22px;
+  background: transparent;
+  border: 0;
+  color: var(--gp-text);
+  font-size: 24px;
   line-height: 1;
   font-weight: 700;
   cursor: pointer;
   z-index: 1;
 }
-.drawer-close:hover { border-color: var(--gp-gold); }
+.drawer-close:hover { color: var(--gp-accent); }
 
 .drawer-head {
   display: grid;
@@ -575,7 +575,7 @@ html { scroll-behavior: smooth; }
   font-weight: 700;
   line-height: 1.18;
   letter-spacing: 0.2px;
-  color: var(--gp-cream);
+  color: var(--gp-text);
   margin: 0;
 }
 .drawer-desc {
@@ -605,7 +605,7 @@ html { scroll-behavior: smooth; }
   font-weight: 800;
   letter-spacing: 1.4px;
   text-transform: uppercase;
-  color: var(--gp-gold);
+  color: var(--gp-gold-dark);
 }
 .drawer-stepper {
   display: inline-flex;
@@ -619,7 +619,7 @@ html { scroll-behavior: smooth; }
 .drawer-stepper-btn {
   width: 38px;
   background: transparent;
-  color: var(--gp-gold-bright);
+  color: var(--gp-text);
   border: 0;
   font-size: 18px;
   font-weight: 800;
@@ -629,7 +629,7 @@ html { scroll-behavior: smooth; }
 }
 .drawer-stepper-btn:hover:not(:disabled) {
   background: var(--gp-gold);
-  color: var(--gp-bg);
+  color: var(--gp-text);
 }
 .drawer-stepper-btn:disabled { opacity: 0.4; cursor: not-allowed; }
 .drawer-stepper-value {
@@ -689,54 +689,48 @@ html { scroll-behavior: smooth; }
 }
 .drawer-cta:disabled { opacity: 0.55; cursor: progress; }
 
-/* PRIMARY — tuxedo treatment matching the rest of the app: dark fill,
- * thick bright-gold border, bright-gold text, strong gold halo. NOT solid
- * gold (the app's design language is gold-on-black throughout). */
+/* PRIMARY — canonical buy button: filled tequila-gold with dark text,
+ * matching every other buy CTA across the app. */
 .drawer-cta-primary {
-  background: var(--gp-text);
-  color: var(--gp-gold-bright);
-  border: 2px solid var(--gp-gold);
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.55),
-              0 0 26px rgba(212, 175, 55, 0.3),
-              inset 0 0 0 1px rgba(212, 175, 55, 0.4);
+  background: var(--gp-gold);
+  color: var(--gp-text);
+  border: 2px solid var(--gp-gold-dark);
+  box-shadow: 0 4px 14px rgba(20, 17, 13, 0.16),
+              inset 0 1px 0 rgba(255, 255, 255, 0.35);
 }
 .drawer-cta-primary:hover:not(:disabled) {
-  background: var(--gp-surface);
-  border-color: var(--gp-gold-bright);
-  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.6),
-              0 0 32px rgba(212, 175, 55, 0.42),
-              inset 0 0 0 1px var(--gp-gold-bright);
+  background: var(--gp-gold-bright);
+  border-color: var(--gp-gold);
+  box-shadow: 0 6px 18px rgba(20, 17, 13, 0.2),
+              inset 0 1px 0 rgba(255, 255, 255, 0.45);
 }
 
-/* SECONDARY — clearly a button: surface fill + thick gold border + bright
- * gold text. Tuxedo treatment. */
+/* SECONDARY — cream fill, dark outline, dark text. Quiet companion to the
+ * gold primary on the light drawer skin. */
 .drawer-cta-secondary {
-  background: var(--gp-surface-alt);
-  color: var(--gp-gold-bright);
-  border: 2px solid var(--gp-gold);
-  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.45),
-              inset 0 0 0 1px rgba(212, 175, 55, 0.18);
+  background: var(--gp-surface);
+  color: var(--gp-text);
+  border: 1.5px solid var(--gp-text-muted);
+  box-shadow: 0 2px 8px rgba(20, 17, 13, 0.08);
 }
 .drawer-cta-secondary:hover:not(:disabled) {
-  background: var(--gp-surface-3);
-  border-color: var(--gp-gold-bright);
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.55),
-              0 0 22px rgba(212, 175, 55, 0.28),
-              inset 0 0 0 1px var(--gp-gold-bright);
+  background: var(--gp-surface-alt);
+  border-color: var(--gp-text);
+  box-shadow: 0 3px 12px rgba(20, 17, 13, 0.12);
 }
 
-/* TERTIARY — solid fill + visible soft border + cream text. Still reads as
- * a button card, just quietest of the three. */
+/* TERTIARY — same cream-with-dark-outline treatment as secondary, just the
+ * quietest action in the stack (e.g. Clear cart / Keep shopping). */
 .drawer-cta-tertiary {
-  background: var(--gp-surface-alt);
-  color: var(--gp-cream);
-  border: 1.5px solid var(--gp-border);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+  background: var(--gp-surface);
+  color: var(--gp-text);
+  border: 1.5px solid var(--gp-text-muted);
+  box-shadow: 0 2px 8px rgba(20, 17, 13, 0.06);
 }
 .drawer-cta-tertiary:hover:not(:disabled) {
-  background: var(--gp-surface);
-  border-color: var(--gp-gold-deep);
-  color: var(--gp-gold-bright);
+  background: var(--gp-surface-alt);
+  border-color: var(--gp-text-muted);
+  color: var(--gp-text);
 }
 
 @media (min-width: 600px) {
@@ -841,7 +835,7 @@ html { scroll-behavior: smooth; }
   font-size: 22px;
   font-weight: 700;
   letter-spacing: 0.2px;
-  color: var(--gp-cream);
+  color: var(--gp-text);
   margin: 0;
 }
 .cart-panel-sub {
@@ -901,7 +895,7 @@ html { scroll-behavior: smooth; }
   font-weight: 700;
   line-height: 1.2;
   letter-spacing: 0.2px;
-  color: var(--gp-cream);
+  color: var(--gp-text);
   margin: 0;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -927,7 +921,7 @@ html { scroll-behavior: smooth; }
   padding: 4px 6px;
 }
 .cart-line-remove:hover {
-  color: var(--gp-gold-bright);
+  color: var(--gp-accent);
 }
 .product-thumb {
   width: 128px;
@@ -1047,7 +1041,7 @@ html { scroll-behavior: smooth; }
   font-weight: 700;
   line-height: 1.15;
   letter-spacing: 0.3px;
-  color: var(--gp-cream);
+  color: var(--gp-text);
 }
 .glue-bestfor {
   color: var(--gp-text-muted);
@@ -1116,7 +1110,7 @@ html { scroll-behavior: smooth; }
   margin-right: 6px;
 }
 .chip.tinted {
-  color: var(--gp-cream);
+  color: var(--gp-text);
 }
 
 /* Bullets */
@@ -1186,17 +1180,19 @@ html { scroll-behavior: smooth; }
 .rank.r2 { border-color: var(--gp-silver); color: var(--gp-silver); }
 .rank.r3 { border-color: var(--gp-bronze); color: var(--gp-bronze); }
 
-/* Buy button — tuxedo treatment: black interior, gold border, gold text.
- * High legibility, signals premium. Inverts to solid gold on hover/active. */
+/* Buy button — canonical commerce style (Sugar Skull light skin): filled
+ * tequila-gold background with dark, high-contrast text. Every buy button
+ * site-wide (.buy, .compare-buy, .mini-card-buy, .drawer-cta-primary,
+ * .shop-all) shares this fill so the call-to-action reads consistently. */
 .buy {
   margin-top: var(--gp-lg);
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: var(--gp-sm);
-  background: var(--gp-text);
-  color: var(--gp-gold-bright);
-  border: 1.5px solid var(--gp-gold);
+  background: var(--gp-gold);
+  color: var(--gp-text);
+  border: 1.5px solid var(--gp-gold-dark);
   font-weight: 800;
   font-size: var(--gp-fs-md);
   letter-spacing: 1.5px;
@@ -1207,22 +1203,20 @@ html { scroll-behavior: smooth; }
   text-decoration: none;
   transition: background-color 150ms ease, color 150ms ease, transform 80ms ease;
   box-shadow:
-    inset 0 1px 0 rgba(212, 175, 55, 0.18),
-    0 2px 10px rgba(0, 0, 0, 0.5);
+    inset 0 1px 0 rgba(255, 255, 255, 0.35),
+    0 2px 10px rgba(20, 17, 13, 0.12);
 }
-/* Subtle "lit up" hover/active — keep the dark interior and brighten the
- * border + text glow. The earlier invert-to-solid-gold flash read as
- * yellow/mustard and broke the luxury vibe. */
+/* Hover/active — brighten the gold fill, keep the dark text. */
 .buy:hover {
-  background: var(--gp-surface);
-  border-color: var(--gp-gold-bright);
-  color: var(--gp-gold-bright);
+  background: var(--gp-gold-bright);
+  border-color: var(--gp-gold);
+  color: var(--gp-text);
   box-shadow:
-    inset 0 0 0 1px var(--gp-gold-bright),
-    0 0 24px rgba(212, 175, 55, 0.2);
+    inset 0 1px 0 rgba(255, 255, 255, 0.45),
+    0 4px 16px rgba(20, 17, 13, 0.16);
 }
 .buy:active {
-  background: var(--gp-surface-alt);
+  background: var(--gp-gold-dark);
   transform: scale(0.99);
 }
 .buy.compact {
@@ -1272,7 +1266,7 @@ html { scroll-behavior: smooth; }
   transition: border-color 150ms ease, color 150ms ease;
 }
 .ghost-btn:hover {
-  color: var(--gp-cream);
+  color: var(--gp-text);
   border-color: var(--gp-gold-deep);
 }
 .ghost-btn:disabled {
@@ -1322,7 +1316,7 @@ html { scroll-behavior: smooth; }
   font-weight: 700;
   line-height: 1.18;
   letter-spacing: 0.2px;
-  color: var(--gp-cream);
+  color: var(--gp-text);
   overflow: hidden;
   display: -webkit-box;
   -webkit-line-clamp: 2;
@@ -1443,7 +1437,7 @@ html { scroll-behavior: smooth; }
   gap: var(--gp-md);
   padding: 12px var(--gp-md);
   text-decoration: none;
-  color: var(--gp-cream);
+  color: var(--gp-text);
   min-width: 0;
 }
 .rig-role {
@@ -1467,7 +1461,7 @@ html { scroll-behavior: smooth; }
 .rig-row:focus-within .rig-role {
   background: rgba(212, 175, 55, 0.18);
   border-color: var(--gp-gold);
-  color: var(--gp-gold-bright);
+  color: var(--gp-accent);
 }
 .rig-name {
   flex: 1;
@@ -1477,14 +1471,14 @@ html { scroll-behavior: smooth; }
   font-weight: 700;
   line-height: 1.2;
   letter-spacing: 0.2px;
-  color: var(--gp-cream);
+  color: var(--gp-text);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 .rig-row:hover .rig-name,
 .rig-row:focus-within .rig-name {
-  color: var(--gp-gold-bright);
+  color: var(--gp-accent);
 }
 .rig-chev {
   flex: 0 0 auto;
@@ -1496,7 +1490,7 @@ html { scroll-behavior: smooth; }
 }
 .rig-row:hover .rig-chev,
 .rig-row:focus-within .rig-chev {
-  color: var(--gp-gold-bright);
+  color: var(--gp-accent);
   transform: translate(2px, -2px);
 }
 /* Long product names need room — on the narrowest phones we stack name
@@ -1540,9 +1534,9 @@ html { scroll-behavior: smooth; }
   letter-spacing: 1.2px;
   text-transform: uppercase;
   border-radius: var(--gp-r-sm);
-  background: var(--gp-text);
-  color: var(--gp-gold-bright);
-  border: 1.5px solid var(--gp-gold);
+  background: var(--gp-gold);
+  color: var(--gp-text);
+  border: 1.5px solid var(--gp-gold-dark);
   text-decoration: none;
   text-align: center;
   margin-top: auto;
@@ -1554,10 +1548,10 @@ html { scroll-behavior: smooth; }
   transition: background-color 150ms ease, color 150ms ease;
 }
 .compare-buy:hover {
-  background: var(--gp-surface);
-  border-color: var(--gp-gold-bright);
-  color: var(--gp-gold-bright);
-  box-shadow: inset 0 0 0 1px var(--gp-gold-bright);
+  background: var(--gp-gold-bright);
+  border-color: var(--gp-gold);
+  color: var(--gp-text);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.4);
 }
 .compare-buy.disabled {
   background: transparent;
@@ -1597,7 +1591,7 @@ html { scroll-behavior: smooth; }
 .accessory .name {
   font-size: var(--gp-fs-sm);
   font-weight: 700;
-  color: var(--gp-cream);
+  color: var(--gp-text);
 }
 .accessory .desc {
   color: var(--gp-text-muted);
@@ -1663,7 +1657,7 @@ html { scroll-behavior: smooth; }
 .timeline .glue-name-sm {
   font-size: var(--gp-fs-md);
   font-weight: 700;
-  color: var(--gp-cream);
+  color: var(--gp-text);
   margin-top: 2px;
   overflow: hidden;
   display: -webkit-box;
@@ -1689,10 +1683,11 @@ html { scroll-behavior: smooth; }
   transform: translateX(-50%);
   width: 100%;
   max-width: 560px;
-  background: rgba(0, 0, 0, 0.92);
+  background: var(--gp-surface);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   border-top: 1px solid var(--gp-border);
+  box-shadow: 0 -2px 16px rgba(20, 17, 13, 0.06);
   display: flex;
   padding: 8px 0 calc(8px + env(safe-area-inset-bottom, 0px));
   z-index: 10;
@@ -1723,7 +1718,7 @@ html { scroll-behavior: smooth; }
   flex-direction: column;
   align-items: center;
   gap: 2px;
-  color: var(--gp-text-faint);
+  color: var(--gp-text-muted);
   font-size: 9.5px;
   font-weight: 700;
   text-transform: uppercase;
@@ -1733,8 +1728,8 @@ html { scroll-behavior: smooth; }
   min-width: 0;
   transition: color 150ms ease;
 }
-.tab:hover { color: var(--gp-text-muted); }
-.tab.active { color: var(--gp-gold); }
+.tab:hover { color: var(--gp-text); }
+.tab.active { color: var(--gp-gold-dark); }
 .tab .tab-icon {
   font-size: 22px;
   line-height: 1;
@@ -1817,7 +1812,7 @@ html { scroll-behavior: smooth; }
   display: flex;
   align-items: center;
   gap: var(--gp-sm);
-  color: var(--gp-cream);
+  color: var(--gp-text);
   font-size: var(--gp-fs-xs);
   font-weight: 700;
   text-transform: uppercase;
@@ -1933,7 +1928,7 @@ html { scroll-behavior: smooth; }
   transition: border-color 150ms ease, color 150ms ease, background-color 150ms ease;
 }
 .preset:hover {
-  color: var(--gp-cream);
+  color: var(--gp-text);
   border-color: var(--gp-gold-deep);
 }
 
@@ -1973,7 +1968,7 @@ html { scroll-behavior: smooth; }
   letter-spacing: 1px;
   min-height: 36px;
 }
-.band:hover { color: var(--gp-cream); border-color: var(--gp-gold-deep); }
+.band:hover { color: var(--gp-text); border-color: var(--gp-gold-deep); }
 .band.active {
   background: var(--gp-text);
   border-color: var(--gp-gold);
@@ -2013,7 +2008,7 @@ html { scroll-behavior: smooth; }
   min-height: var(--gp-touch);
   transition: border-color 150ms ease, color 150ms ease;
 }
-.toggle:hover { color: var(--gp-cream); border-color: var(--gp-gold-deep); }
+.toggle:hover { color: var(--gp-text); border-color: var(--gp-gold-deep); }
 /* Active state — tuxedo treatment: dark surface, bright gold border, gold
  * text. Matches the Buy button style so the page reads consistently
  * instead of the previous flat-yellow billboard. */
@@ -2040,7 +2035,7 @@ html { scroll-behavior: smooth; }
 .plan-row .name {
   font-size: var(--gp-fs-md);
   font-weight: 700;
-  color: var(--gp-cream);
+  color: var(--gp-text);
 }
 .plan-row .sub {
   color: var(--gp-text-muted);
@@ -2128,7 +2123,7 @@ html { scroll-behavior: smooth; }
   font-weight: 700;
   line-height: 1.2;
   letter-spacing: 0.2px;
-  color: var(--gp-cream);
+  color: var(--gp-text);
   margin: 0;
   /* allow up to two lines, then ellipsize so the badge stays beside the title */
   display: -webkit-box;
@@ -2189,10 +2184,10 @@ html { scroll-behavior: smooth; }
   align-items: center;
   justify-content: center;
   gap: var(--gp-sm);
-  background: var(--gp-text);
-  border: 1.5px solid var(--gp-gold);
+  background: var(--gp-gold);
+  border: 1.5px solid var(--gp-gold-dark);
   border-radius: var(--gp-r-md);
-  color: var(--gp-gold-bright);
+  color: var(--gp-text);
   font-weight: 800;
   font-size: var(--gp-fs-md);
   letter-spacing: 1.5px;
@@ -2203,16 +2198,16 @@ html { scroll-behavior: smooth; }
   text-decoration: none;
   min-height: var(--gp-touch);
   box-shadow:
-    inset 0 1px 0 rgba(212, 175, 55, 0.18),
-    0 2px 10px rgba(0, 0, 0, 0.5);
+    inset 0 1px 0 rgba(255, 255, 255, 0.35),
+    0 2px 10px rgba(20, 17, 13, 0.12);
   transition: background-color 150ms ease, color 150ms ease, border-color 150ms ease, box-shadow 150ms ease;
 }
 .shop-all:hover {
-  background: var(--gp-surface);
-  border-color: var(--gp-gold-bright);
+  background: var(--gp-gold-bright);
+  border-color: var(--gp-gold);
   box-shadow:
-    inset 0 0 0 1px var(--gp-gold-bright),
-    0 0 24px rgba(212, 175, 55, 0.2);
+    inset 0 1px 0 rgba(255, 255, 255, 0.45),
+    0 4px 16px rgba(20, 17, 13, 0.16);
 }
 
 /* Tips — editorial layout: real product photo + magazine-style typography. */
@@ -2261,9 +2256,9 @@ html { scroll-behavior: smooth; }
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--gp-gold-bright);
+  color: var(--gp-gold-dark);
   flex-shrink: 0;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+  box-shadow: 0 2px 10px rgba(20, 17, 13, 0.12);
 }
 .tip-hero-svg svg { display: block; }
 .tip-head-text {
@@ -2285,7 +2280,7 @@ html { scroll-behavior: smooth; }
   font-weight: 700;
   line-height: 1.05;
   letter-spacing: 0.3px;
-  color: var(--gp-cream);
+  color: var(--gp-text);
   margin-top: 4px;
 }
 .tip-dek {
@@ -2343,12 +2338,12 @@ html { scroll-behavior: smooth; }
 .tip-footer-link {
   font-size: var(--gp-fs-sm);
   font-weight: 700;
-  color: var(--gp-gold-bright);
+  color: var(--gp-gold-dark);
   text-decoration: none;
   letter-spacing: 0.2px;
 }
 .tip-footer-link:hover {
-  color: var(--gp-cream);
+  color: var(--gp-accent);
 }
 
 /* Footer credit */
@@ -2402,7 +2397,7 @@ body.gp-standalone {
   font-family: var(--gp-font-display);
   font-size: var(--gp-fs-xl);
   font-weight: 700;
-  color: var(--gp-cream);
+  color: var(--gp-text);
   letter-spacing: 0.5px;
 }
 .time-block.active .time-block-title {
@@ -2472,7 +2467,7 @@ body.gp-standalone {
   font-weight: 700;
   line-height: 1.18;
   letter-spacing: 0.2px;
-  color: var(--gp-cream);
+  color: var(--gp-text);
   overflow: hidden;
   display: -webkit-box;
   -webkit-line-clamp: 2;
@@ -2558,9 +2553,9 @@ body.gp-standalone {
   justify-content: center;
   gap: 4px;
   padding: 6px 4px;
-  background: var(--gp-text);
-  color: var(--gp-gold-bright);
-  border: 1px solid var(--gp-gold);
+  background: var(--gp-gold);
+  color: var(--gp-text);
+  border: 1px solid var(--gp-gold-dark);
   border-radius: var(--gp-r-sm);
   font-size: 10px;
   font-weight: 800;
@@ -2571,10 +2566,10 @@ body.gp-standalone {
   min-height: 30px;
 }
 .mini-card-buy:hover {
-  background: var(--gp-surface);
-  border-color: var(--gp-gold-bright);
-  color: var(--gp-gold-bright);
-  box-shadow: inset 0 0 0 1px var(--gp-gold-bright);
+  background: var(--gp-gold-bright);
+  border-color: var(--gp-gold);
+  color: var(--gp-text);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.4);
 }
 .mini-card-buy.disabled {
   background: transparent;
@@ -2654,7 +2649,7 @@ body.gp-standalone {
   font-family: var(--gp-font-display);
   font-size: var(--gp-fs-lg);
   font-weight: 700;
-  color: var(--gp-cream);
+  color: var(--gp-text);
   flex: 1;
 }
 .collapsible-title.small {
@@ -2710,7 +2705,7 @@ body.gp-standalone {
 }
 .scene-icon { font-size: 22px; line-height: 1; }
 .scene-label {
-  color: var(--gp-cream);
+  color: var(--gp-text);
   font-size: var(--gp-fs-sm);
   font-weight: 800;
 }
@@ -2788,7 +2783,7 @@ body.gp-standalone {
   border: 1px solid var(--gp-gold-deep);
   border-radius: var(--gp-r-sm);
   padding: var(--gp-sm) var(--gp-md);
-  color: var(--gp-cream);
+  color: var(--gp-text);
   font-size: var(--gp-fs-sm);
 }
 
@@ -2807,7 +2802,7 @@ body.gp-standalone {
   background: var(--gp-surface);
   border: 1px solid var(--gp-border);
   border-radius: var(--gp-r-pill);
-  color: var(--gp-cream);
+  color: var(--gp-text);
   font-size: var(--gp-fs-xs);
   font-weight: 700;
   padding: 8px 12px;
@@ -2818,7 +2813,7 @@ body.gp-standalone {
 .hotspot-chip:hover {
   border-color: var(--gp-gold);
   background: var(--gp-surface-alt);
-  color: var(--gp-gold-bright);
+  color: var(--gp-accent);
 }
 .hotspot-chip:disabled {
   opacity: 0.5;
@@ -2857,7 +2852,7 @@ body.gp-standalone {
 }
 .spec-grid dd {
   margin: 0;
-  color: var(--gp-cream);
+  color: var(--gp-text);
   font-size: var(--gp-fs-sm);
   font-weight: 600;
   line-height: 1.4;
@@ -3003,7 +2998,7 @@ body.gp-standalone {
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  color: var(--gp-cream);
+  color: var(--gp-text);
   font-family: var(--gp-font-body);
   font-size: var(--gp-fs-xs);
   font-weight: 800;
@@ -3036,7 +3031,7 @@ body.gp-standalone {
 .stepper-btn {
   width: 40px;
   background: var(--gp-surface-alt);
-  color: var(--gp-gold-bright);
+  color: var(--gp-text);
   border: 0;
   font-size: 20px;
   font-weight: 800;
@@ -3046,7 +3041,7 @@ body.gp-standalone {
 }
 .stepper-btn:hover {
   background: var(--gp-gold);
-  color: var(--gp-bg);
+  color: var(--gp-text);
 }
 .stepper-btn:active {
   background: var(--gp-gold-dark);
@@ -3124,14 +3119,14 @@ body.gp-standalone {
   justify-content: space-between;
   align-items: center;
   gap: var(--gp-sm);
-  color: var(--gp-cream);
+  color: var(--gp-text);
   font-size: var(--gp-fs-sm);
   cursor: pointer;
   transition: background-color 120ms ease;
 }
 .trip-result-btn:hover {
   background: var(--gp-surface-alt);
-  color: var(--gp-gold-bright);
+  color: var(--gp-accent);
 }
 .trip-result-name {
   font-weight: 600;
@@ -3213,7 +3208,7 @@ body.gp-standalone {
   font-family: var(--gp-font-display);
   font-size: var(--gp-fs-lg);
   font-weight: 700;
-  color: var(--gp-cream);
+  color: var(--gp-text);
   line-height: 1.1;
 }
 .synergy-cat-role {
@@ -3334,7 +3329,7 @@ body.gp-standalone {
   font-size: 16px;
   font-weight: 700;
   line-height: 1.2;
-  color: var(--gp-cream);
+  color: var(--gp-text);
 }
 .synergy-card-why {
   display: flex;
@@ -3408,7 +3403,7 @@ body.gp-standalone {
   font-weight: 700;
   letter-spacing: 0.3px;
   line-height: 1.1;
-  color: var(--gp-cream);
+  color: var(--gp-text);
 }
 
 /* (Legacy) About / Why GluePull — editorial hero at the top of Home */
@@ -3456,7 +3451,7 @@ body.gp-standalone {
   font-weight: 700;
   letter-spacing: 0.4px;
   line-height: 1.15;
-  color: var(--gp-cream);
+  color: var(--gp-text);
 }
 .about-card .collapsible-chev {
   position: absolute;
@@ -3483,7 +3478,7 @@ body.gp-standalone {
   color: var(--gp-text);
 }
 .about-body p strong {
-  color: var(--gp-cream);
+  color: var(--gp-text);
   font-weight: 700;
 }
 .about-pull {
@@ -3497,7 +3492,7 @@ body.gp-standalone {
   font-style: italic;
   font-weight: 600;
   line-height: 1.35;
-  color: var(--gp-gold-bright);
+  color: var(--gp-accent-dark);
   letter-spacing: 0.2px;
 }
 .about-list {
@@ -3540,7 +3535,7 @@ body.gp-standalone {
   font-family: var(--gp-font-display);
   font-size: 17px;
   font-weight: 700;
-  color: var(--gp-cream);
+  color: var(--gp-text);
   margin-top: var(--gp-sm);
   margin-bottom: -4px;
 }
@@ -3548,9 +3543,9 @@ body.gp-standalone {
   margin-top: var(--gp-sm);
   padding-top: var(--gp-md);
   border-top: 1px solid var(--gp-border-soft);
-  color: var(--gp-cream);
+  color: var(--gp-text);
 }
 .about-closer em {
-  color: var(--gp-gold-bright);
+  color: var(--gp-accent-dark);
   font-style: italic;
 }
