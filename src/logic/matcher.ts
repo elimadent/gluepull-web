@@ -114,8 +114,29 @@ function pickTool(
   return chooseBest(filtered.length ? filtered : inCategory, rankOf);
 }
 
+/** Which gun classes satisfy a required class. A dual-temp gun runs both hot
+ *  and cool, so it covers a high-temp need; a hot-only gun can't run cool, so
+ *  it does NOT cover a dual-temp need. The high-output collision gun is only
+ *  offered when the glue actually calls for it (so it doesn't hijack everyday
+ *  small-ding picks). */
+const GUN_CLASS_COMPAT: Record<GunTempClass, GunTempClass[]> = {
+  'high-temp': ['high-temp', 'dual-temp'],
+  'dual-temp': ['dual-temp'],
+  'high-capacity-collision': ['high-capacity-collision'],
+};
+
 function pickGun(klass: GunTempClass, rankOf?: RankFn): Tool {
-  return pickTool('glue-gun', (t) => t.gunTempClass === klass, rankOf);
+  const guns = tools.filter((t) => t.category === 'glue-gun');
+  const accepts = GUN_CLASS_COMPAT[klass];
+  // Exact-class guns first, then compatible alternates (e.g. a dual-temp gun
+  // for a high-temp glue) — so the no-data fallback keeps an on-class pick,
+  // while best-seller rank can still surface a compatible gun when it leads.
+  const exact = guns.filter((t) => t.gunTempClass === klass);
+  const compatible = guns.filter(
+    (t) => t.gunTempClass !== klass && t.gunTempClass !== undefined && accepts.includes(t.gunTempClass)
+  );
+  const pool = [...exact, ...compatible];
+  return chooseBest(pool.length ? pool : guns, rankOf);
 }
 
 function pickPuller(
@@ -189,7 +210,7 @@ function rationaleFor(glue: Glue, dent: DentGeometry, klass: GunTempClass): stri
       ? 'paired with a high-capacity collision gun for the flow rate this stick needs'
       : klass === 'dual-temp'
       ? 'paired with a dual-temp gun (run cooler) for cool-weather flow'
-      : 'paired with a high-temp gun for standard hot-melt flow';
+      : 'paired with a gun that runs hot enough for standard hot-melt flow';
 
   return `For ${dentLabel} on ${tagLabel} days — ${gunBlurb}.`;
 }
