@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { AddToCartButton } from '@/components/AddToCartButton';
 import { GlueStickPlaceholder } from '@/components/GlueStickPlaceholder';
 import { PairedRig } from '@/components/PairedRig';
 import { ProductImageLightbox } from '@/components/ProductImageLightbox';
@@ -6,7 +7,6 @@ import { RankBadge } from '@/components/RankBadge';
 import { getAnsonProduct } from '@/data/products';
 import { colors } from '@/theme/theme';
 import { gunTempLabel } from '@/utils/gunTemp';
-import { linkTarget } from '@/utils/link';
 import { Glue } from '@/types';
 
 /**
@@ -235,23 +235,19 @@ export function GlueCard({ glue, rank, match }: GlueCardProps) {
         </div>
       </section>
 
-      {/* Section 5: Buy */}
-      {productUrl ? (
-        <a
-          className="buy"
-          href={productUrl}
-          target={linkTarget(productUrl)}
-          rel="noopener noreferrer"
-          aria-label={`Buy ${displayName} on ansonpdr.com`}
-        >
-          <span aria-hidden>🛒</span>
-          <span>Buy on Anson PDR</span>
-        </a>
-      ) : (
-        <div className="buy disabled" aria-disabled="true">
-          Product not yet linked
-        </div>
-      )}
+      {/* Section 5: Buy — adds to the in-app cart (no Anson redirect). */}
+      <AddToCartButton
+        className="buy"
+        label="Buy on Anson PDR"
+        product={{
+          glueId: glue.id,
+          name: displayName,
+          imageUrl,
+          description: description ?? undefined,
+          productUrl: productUrl ?? '',
+        }}
+        disabledLabel={productUrl ? undefined : 'Product not yet linked'}
+      />
 
       {lightboxOpen && imageUrl ? (
         <ProductImageLightbox

@@ -1,6 +1,6 @@
 import { useRef } from 'react';
+import { AddToCartButton } from '@/components/AddToCartButton';
 import { SYNERGY_STACK, SynergyCategory } from '@/data/synergyStack';
-import { linkTarget } from '@/utils/link';
 
 /**
  * Replacement for the old "Complete Tool Kit" list. Each row is a collapsible
@@ -93,15 +93,16 @@ function ProductCarousel({ category }: { category: SynergyCategory }) {
                 <span className="synergy-card-why-label">Why this pairs</span>
                 <span>{p.whyPaired}</span>
               </p>
-              <a
+              <AddToCartButton
                 className="buy"
-                href={p.url}
-                target={linkTarget(p.url)}
-                rel="noopener noreferrer"
-              >
-                <span aria-hidden>🛒</span>
-                <span>Buy on Anson PDR</span>
-              </a>
+                label="Buy on Anson PDR"
+                product={{
+                  name: p.name,
+                  imageUrl: p.image,
+                  description: p.whyPaired,
+                  productUrl: p.url,
+                }}
+              />
             </div>
           </article>
         ))}

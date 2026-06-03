@@ -1,9 +1,9 @@
 import { useState } from 'react';
+import { AddToCartButton } from '@/components/AddToCartButton';
 import { GlueStickPlaceholder } from '@/components/GlueStickPlaceholder';
 import { ProductImageLightbox } from '@/components/ProductImageLightbox';
 import { getAnsonProduct } from '@/data/products';
 import { gunTempCompact, panelTempRange } from '@/utils/gunTemp';
-import { linkTarget } from '@/utils/link';
 import { GlueScore } from '@/types';
 
 /**
@@ -16,7 +16,6 @@ export function MiniGlueCard({ score }: { score: GlueScore }) {
   const matched = product?.matched === true;
   const displayName = matched ? product.name : glue.name;
   const imageUrl = matched ? product.imageUrl : null;
-  const productUrl = matched ? product.productUrl : null;
   const [zoomOpen, setZoomOpen] = useState(false);
 
   return (
@@ -43,17 +42,18 @@ export function MiniGlueCard({ score }: { score: GlueScore }) {
       <div className="mini-card-body">
         <div className="mini-card-meta">{glue.strength} · {gunTempCompact(glue.gunTemp)}</div>
         <div className="mini-card-meta">Panel · {panelTempRange(glue).range}</div>
-        {productUrl ? (
-          <a
+        {matched ? (
+          <AddToCartButton
             className="mini-card-buy"
-            href={productUrl}
-            target={linkTarget(productUrl)}
-            rel="noopener noreferrer"
-            aria-label={`Buy ${displayName} on Anson PDR`}
-          >
-            <span aria-hidden>🛒</span>
-            <span>Buy</span>
-          </a>
+            label="Buy"
+            product={{
+              glueId: glue.id,
+              name: displayName,
+              imageUrl,
+              description: product.description ?? undefined,
+              productUrl: product.productUrl,
+            }}
+          />
         ) : (
           <span className="mini-card-buy disabled" aria-disabled="true">
             Not listed
