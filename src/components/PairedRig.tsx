@@ -1,4 +1,5 @@
 import { useMemo } from 'react';
+import { useBestSellers } from '@/hooks/useBestSellers';
 import { inferredDentFor, recommendRig, type DentGeometry } from '@/logic/matcher';
 import { linkTarget } from '@/utils/link';
 import type { Glue, Tool } from '@/types';
@@ -43,9 +44,10 @@ function RigRow({ tool }: { tool: Tool }) {
  * glue and tap straight through to each piece on ansonpdr.com.
  */
 export function PairedRig({ glue, dent }: PairedRigProps) {
+  const { rankOf } = useBestSellers();
   const rig = useMemo(() => {
-    return recommendRig(glue, dent ?? inferredDentFor(glue));
-  }, [glue, dent]);
+    return recommendRig(glue, dent ?? inferredDentFor(glue), rankOf);
+  }, [glue, dent, rankOf]);
   return (
     <section className="glue-section paired-rig">
       <h4 className="glue-section-head">Paired Rig</h4>
@@ -53,7 +55,8 @@ export function PairedRig({ glue, dent }: PairedRigProps) {
       <p className="rig-how">
         Picked by Glue IQ from the live Anson catalog based on this glue's
         strength tier, Anson weather tags, and the dent geometry it was made
-        for. Tap any row to view the product on ansonpdr.com.
+        for — favoring Anson best sellers where more than one tool fits. Tap
+        any row to view the product on ansonpdr.com.
       </p>
       <ul className="rig-list">
         <RigRow tool={rig.gun} />
