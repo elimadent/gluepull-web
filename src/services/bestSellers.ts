@@ -9,14 +9,16 @@
  *
  * The Paired-Rig matcher uses this to PREFER best-selling products among the
  * tools that already fit the glue + dent: relevance first, popularity as the
- * tiebreak. Every failure path (wrong handle, offline, CORS, empty) degrades
- * silently to the prior rules-based pick.
+ * tiebreak. Every failure path (wrong handle, offline, CORS, empty) falls back
+ * to the curated list in data/bestSellers.ts, then to the prior rules pick.
  *
  * Shopify serves `/collections/<handle>/products.json` publicly with open
  * CORS (same as the `/products/<handle>.js` endpoint the cart already uses).
  * Products come back in the collection's configured sort order, so a
  * "best selling"-sorted collection yields popularity order directly.
  */
+
+import { CURATED_BEST_SELLERS } from '@/data/bestSellers';
 
 declare global {
   interface Window {
@@ -171,11 +173,11 @@ export async function getBestSellerHandles(): Promise<string[]> {
       writeCache(handles);
       return handles;
     }
-    // Nothing fetched — keep any stale cache so a transient miss doesn't wipe
-    // a previously-good list.
-    return cached?.handles ?? [];
+    // Nothing fetched — keep any stale (previously-good) cache, else fall back
+    // to the curated list so the featured picks still come through.
+    return cached?.handles?.length ? cached.handles : CURATED_BEST_SELLERS;
   })()
-    .catch(() => cached?.handles ?? [])
+    .catch(() => (cached?.handles?.length ? cached.handles : CURATED_BEST_SELLERS))
     .finally(() => {
       inflight = null;
     });
