@@ -36,7 +36,7 @@ const CANDIDATE_HANDLES = [
   'popular',
 ];
 
-const STORAGE_KEY = 'glueiq.bestsellers.v1';
+const STORAGE_KEY = 'glueiq.bestsellers.v2';
 const TTL_MS = 12 * 60 * 60 * 1000; // 12h — popularity drifts slowly.
 
 /**
@@ -45,7 +45,7 @@ const TTL_MS = 12 * 60 * 60 * 1000; // 12h — popularity drifts slowly.
  * unlike Admin tokens, which must never be exposed. Override at build time
  * with VITE_SHOPIFY_STOREFRONT_TOKEN or at runtime via window.GLUEIQ_SHOPIFY_TOKEN.
  */
-const DEFAULT_STOREFRONT_TOKEN = 'a86afc78c42fb73db52b72769b54ce12';
+const DEFAULT_STOREFRONT_TOKEN = 'e7ae3d3206b9f2a960ff326fbe1eac1d';
 const STOREFRONT_API_VERSION = '2024-04';
 
 interface CachedBestSellers {
