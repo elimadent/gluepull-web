@@ -31,26 +31,28 @@ Cross-account handoff for **Glue IQ** (`elimadent/gluepull-web`).
   handoff and the bible.
 
 ## 3. Current state
-- **Done & merged to `main`:** PRs **#6–#17** (best-seller signal, theming pass,
+- **COMPLETE — no pending dev work** (confirmed by James, 2026-06-06).
+- **Done & merged to `main`:** PRs **#6–#18** (best-seller signal, theming pass,
   matcher dual-temp fix, glue catalog doc, light cart drawer + toast, editorial
-  pins, Seth's new Headless token, location-button theming). `main` @ `eb98c82`.
-- **In progress / unverified:** Live best-seller feed via Seth's new Headless
-  token (#16) — wired but NOT confirmed in a real browser (sandbox can't reach
-  ansonpdr.com).
-- **Blocked:** Real Anson best-seller order (waiting on dispatch list and/or
-  feed verification).
+  pins, Seth's new Headless token, location-button theming, + handoff/bible
+  docs). `main` @ `38ca4dd`.
+- **Live best-seller feed:** wired via Seth's Headless token (#16). Per James the
+  app is complete and in use; not a blocker either way — the curated pins
+  (`src/data/bestSellers.ts`) lead and the app degrades gracefully if the live
+  API is ever unreachable.
 
-## 4. Outstanding tasks (priority order)
-1. **Verify the live best-seller feed** in a real browser (see §7). If empty →
-   loop back to Seth on token scope / API version.
-2. **Get the real best-seller order** (dispatch's `?sort_by=best-selling` list,
-   or once the live feed works it's automatic) and reconcile the editorial pins.
-3. (Optional) Temperature-band ACTIVE segment is still dark — restyle if James
-   wants full "no black."
-4. (Optional) Add a "new version available" refresh nudge to defeat iOS
-   stale-cache (root cause of many "still showing X" reports).
-5. (Optional) Pin more products (tab/lifter/prep) — one-line edits in
-   `src/data/bestSellers.ts`. Extend best-seller ordering to "Buy these glues".
+## 4. Outstanding tasks
+**None required — project is complete.** The items below are purely OPTIONAL
+future ideas, not a backlog:
+- (Optional) Reconcile editorial pins against a real Anson dispatch
+  `?sort_by=best-selling` list, if James ever wants the order to mirror exact
+  sales. Pins live in `src/data/bestSellers.ts`.
+- (Optional) Temperature-band ACTIVE segment is dark by design (contrast);
+  restyle to gold only if James wants full "no black."
+- (Optional) Add a "new version available" refresh nudge to defeat iOS
+  stale-cache (root cause of past "still showing X" reports).
+- (Optional) Pin more products (tab/lifter/prep) — one-line edits in
+  `src/data/bestSellers.ts`. Extend best-seller ordering to "Buy these glues".
 
 ## 5. Key decisions + context
 - **Best sellers:** live = Storefront API `products(sortKey: BEST_SELLING)`,
@@ -73,10 +75,9 @@ Cross-account handoff for **Glue IQ** (`elimadent/gluepull-web`).
   `main`. No direct pushes to main. Deploys verified via GitHub Actions.
 
 ## 6. Open blockers requiring James input
-- **Confirm the live feed** (run §7 console snippet, report FEED vs ERR).
-- **Provide / confirm the real best-seller order** (dispatch list) so pins match
-  actual sales.
-- Decide on the temperature-band dark active state (keep vs gold).
+- **None.** Project signed off as complete by James on 2026-06-06. The former
+  blockers (live-feed confirmation, real best-seller order, temp-band active
+  color) are resolved or moved to the optional list in §4.
 
 ## 7. How to resume (plain-language next steps)
 1. Sync: `git fetch origin main` then ensure local `main` matches.
@@ -98,10 +99,9 @@ Cross-account handoff for **Glue IQ** (`elimadent/gluepull-web`).
    have him use `?v=` / Private tab before assuming a code bug.
 
 ## 8. Uncommitted code state
-At handoff: working tree **clean**, all app code merged to `origin/main`
-(`eb98c82`). The only new files are this handoff doc + `GLUEPULL_BIBLE.md`,
-added on branch `docs/handoff-bible` (PR pending/merged separately). `git status`
-after sync showed clean before creating these docs.
+Working tree **clean**; everything merged to `origin/main` (`38ca4dd`, #18 — the
+handoff doc + `GLUEPULL_BIBLE.md` are now merged). No uncommitted or unmerged
+work remains.
 
 ## 9. Important file pointers
 - `src/data/bestSellers.ts` — editorial PINS (featured products). **Edit here.**

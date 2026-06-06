@@ -110,3 +110,30 @@ shipped a **glue catalog** doc. All work merged to `main` via squash PRs #6–#1
   iOS stale-cache problem on future deploys.
 - Optionally extend best-seller ordering to the "Buy these glues" plan cards
   (currently weather-driven only).
+
+---
+
+## Session — 2026-06-06 (Claude Code web, account #2)
+
+Picked up from account #1. Ran the handoff-aware session-start check: working
+tree clean, on branch `claude/tender-ptolemy-4zBAo`, fully synced with
+`origin/main` at `38ca4dd` (#18). All dev work from account #1 (PRs #6–#18) is
+merged — nothing unbuilt or unreconciled.
+
+**James confirmed the project is complete — no pending dev work.** Reframed the
+prior "blockers / pending" notes accordingly:
+
+- **Live best-seller feed:** wired (#16); per James the app is complete and in
+  use. Not a blocker either way — curated pins lead and the app degrades
+  gracefully if the live API is ever unreachable.
+- **Real best-seller dispatch order:** not required; the Trifecta pin stands.
+  Reconciling against a real `?sort_by=best-selling` list is an *optional* future
+  tweak (`src/data/bestSellers.ts`).
+- **Temp-band ACTIVE segment** (`.band.active`, `styles.css`): dark by design for
+  contrast — *optional* restyle only if James wants it.
+- **iOS refresh nudge** and **more pins / "Buy these glues" ordering:** remain
+  *optional* nice-to-haves, never required.
+
+Net: GlueIQ is shipped and live at https://elimadent.github.io/gluepull-web/.
+Updated `_HANDOFF_GLUEPULL.md` (state → complete, blockers cleared) to match.
+Docs only — no code changes this session.
